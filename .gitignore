@@ -1,0 +1,10 @@
+*.sdf
+*.suo
+*.opensdf
+ipch*
+Release*
+3DTemplateMatchingHeadPoseEstimation/Debug/*
+3DTemplateMatchingHeadPoseEstimation/Release/*
+3DTemplateMatchingHeadPoseEstimation/models/*
+*.user
+*.filters
