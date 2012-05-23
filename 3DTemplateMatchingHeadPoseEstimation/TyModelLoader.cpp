@@ -12,6 +12,8 @@ bool TYHeadModel::mReadModel(char* filename){
 
 	int nPoints;
 	file >> nPoints;
+	
+
 	pointCloud.resize(nPoints);
 	colorCloud.resize(nPoints);
 	float x, y, z, r, g, b;
@@ -28,6 +30,7 @@ bool TYHeadModel::mReadModel(char* filename){
 		sx += x;
 		sy += y;
 		sz += z;
+
 		//cout << inPointCloud[i].x << " " << inPointCloud[i].y << " " << inPointCloud[i].z << endl;
 	}
 	center.x = sx/nPoints;
@@ -43,49 +46,20 @@ bool TYHeadModel::mReadModel(char* filename){
 }
 
 void TYHeadModel::findNose(){
-	cv::flann::Index kdtree;
-	cv::flann::KDTreeIndexParams indexParams;
-	kdtree.build(cv::Mat(pointCloud).reshape(1), indexParams);
 
 	/* find the point with the smallest z value, we regard it as nose tip */
 	float shallowest = FLT_MAX;
 	int index = -1;
+	
+	/* for sake of error range, we get an average of the N nearest points */
+
 	for(unsigned int i = 0 ; i < pointCloud.size() ; i++){
 		if(pointCloud[i].z < shallowest){
 			shallowest = pointCloud[i].z;
 			index = i;
 		}
 	}
-
-
-	/* for sake of error range, we get an average of the N nearest points */
-	vector<float> query(3);
-	query[0] = pointCloud[index].x;
-	query[1] = pointCloud[index].y;
-	query[2] = pointCloud[index].z;
-
-	printf("model nose (%.2f,%.2f,%.2f)\n",query[0],query[1],query[2]);
-	shallowestNose.x = query[0];
-	shallowestNose.y = query[1];
-	shallowestNose.z = query[2];
-
-	int knn = 10;
-	vector<int> indices(knn);
-	vector<float> dists(knn);
-
-	kdtree.knnSearch(query, indices, dists, knn, flann::SearchParams(32));
 	
-	knnAvgNose = Point3f(0.f, 0.f, 0.f);
-	for(int i = 0 ; i < knn ; i++){
-		knnAvgNose.x += pointCloud[indices[i]].x;
-		knnAvgNose.y += pointCloud[indices[i]].y;
-		knnAvgNose.z += pointCloud[indices[i]].z;
-	}
-	knnAvgNose.x /= (float)knn;
-	knnAvgNose.y /= (float)knn;
-	knnAvgNose.z /= (float)knn;
-	printf("model nose average(%.2f,%.2f,%.2f)\n",nose.x,nose.y,nose.z);
-
 	Point3f Sum(0.f, 0.f, 0.f);
 	int count = 0;
 	for(unsigned int i = 0 ; i < pointCloud.size() ; i++){
@@ -94,15 +68,12 @@ void TYHeadModel::findNose(){
 			Sum.x += pointCloud[i].x;
 			Sum.y += pointCloud[i].y;
 			Sum.z += pointCloud[i].z;
-			glBegin(GL_POINTS);
-				glColor3f(0.5f, 0.5f, 0.f);
-				glVertex3f(pointCloud[i].x, pointCloud[i].y, pointCloud[i].z);
-			glEnd();		
 		}
 	}
 	averageNose.x = Sum.x / (float)count;
 	averageNose.y = Sum.y / (float)count;
 	averageNose.z = Sum.z / (float)count;
+	printf("model average nose (%.2f,%.2f,%.2f)\n",averageNose.x,averageNose.y,averageNose.z);
 
 	nose = averageNose;
 }

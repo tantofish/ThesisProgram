@@ -8,7 +8,7 @@
 
 TYGLVariables glVars;
 TYTimer myTimerGL;
-TYKinect kinect(true, true);
+TYKinect kinect(true, true, "still.oni");
 TYHeadModel myHead;
 TYSampler sampler;
 TYCloudMatcher matcher;
@@ -17,7 +17,9 @@ TYCloudDrawer modelDrawer;
 TYCloudDrawer observeDrawer;
 
 // πÍ≈Á•Œ
-Vec6f pose;
+Vec6f pose(0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
+Vec3f vecOM(0.f, 0.f, 0.f);
+
 bool doMatch = false;
 
 
@@ -42,6 +44,7 @@ void myDisplay(){
 	
 	/* Sensor Input: Kinect Grab One Frame Set <Depth, RGB> */
 	XnStatus kinectStatus = kinect.GetMetaData();
+
 	if(kinectStatus == XN_STATUS_OK){
 		kinect.GetCvFormatImages();
 	}
@@ -65,10 +68,20 @@ void myDisplay(){
 	glScalef(glVars.uiScale, glVars.uiScale, glVars.uiScale);
 	glTranslatef(-myHead.center.x, -myHead.center.y, -myHead.center.z);
 
+	
+	/*
+	 *	Program Body
+	 */
+
+
+	sampler.randomSampling(kinect.DepthRAW, pose, SAMPLE_NUMBER);
+	if(doMatch)	matcher.match(pose, vecOM, sampler.sample3f, sampler.nose3f);
+	
+
 	glPushMatrix();
 		glTranslatef(myHead.nose.x, myHead.nose.y, myHead.nose.z);		// Still need to set camera rotate pivot here
 	
-		glTranslatef(-pose[3], -pose[4], -pose[5]);	// x, y, z
+		glTranslatef(-pose[3]-vecOM[0], -pose[4]-vecOM[1], -pose[5]-vecOM[2]);	// x, y, z
 		glRotatef(-pose[0], 0, 1, 0);	// yaw
 		glRotatef(-pose[1], 1, 0, 0);	// pitch
 		glRotatef(-pose[2], 0, 0, 1);	// roll
@@ -79,30 +92,13 @@ void myDisplay(){
 		modelDrawer.drawPointCloud(myHead.pointCloud);
 
 	glPopMatrix();
-	/*
-	 *	Program Body
-	 */
 
-	sampler.randomSampling(kinect.DepthRAW, pose, 25);
 	sampler.drawSamples2i(kinect.DepthRGB);
-	
+	sampler.drawSamples3f();
 
-	if(doMatch)	matcher.match(pose, sampler.sample3f, sampler.nose3f);
-
-
-	
-	
 	kinect.Show(true, true);
 	int key = waitKey(1);
 	kinect.RegisterKey(key);
-
-
-
-	sampler.drawSamples3f();
-
-
-
-
 
 	glutSwapBuffers();
 	myTimerGL.sprintFPS();		// time calculation tail

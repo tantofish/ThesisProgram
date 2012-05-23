@@ -25,8 +25,15 @@ private:
 	cv::Point3f srcCenter;
 	cv::Point3f srcNose;
 
-	cv::flann::Index kdtree;
-
+	//cv::flann::Index kdtree;
+	flann::Matrix<float> dataset;
+	flann::Index<flann::L2<float> > *kdtree;
+	float qData[3];
+	flann::Matrix<float> query; 
+	/*
+	cv::Mat srcCloudMat;
+	cv::flann::Index_<cv::flann::L2<float> > kdtree;
+	*/
 
 	void transformPointCloud(const cv::Vec6f arguments,
 							 const std::vector<cv::Point3f> &_pCloud,
@@ -40,7 +47,7 @@ private:
 public:
 	TYCloudMatcher();
 	void buildTree(vector<Point3f> &inCloud, Point3f &inCenter, Point3f &inNose);
-	void match(cv::Vec6f &pose, const std::vector<cv::Point3f> &pCloud, const cv::Point3f &nose);
+	void match(cv::Vec6f &pose, Vec3f &vecOM, const std::vector<cv::Point3f> &pCloud, const cv::Point3f &nose);
 	
 };
 

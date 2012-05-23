@@ -7,7 +7,7 @@
 	TYTimer timer;
 #endif
 
-TYKinect :: TYKinect(bool sync, bool mirr){
+TYKinect :: TYKinect(bool sync, bool mirr, char *filename){
 
 	DepthRAW.create(IMG_H, IMG_W, CV_16UC1);
 	DepthRGB.create(IMG_H, IMG_W, CV_8UC3);
@@ -32,7 +32,10 @@ TYKinect :: TYKinect(bool sync, bool mirr){
 	opMode = OPMODE_NORMAL;
 	cropL = 0; cropR = (width - 1); cropT = 0; cropB = (height - 1); cropN = 0, cropF = 10000;
 	//g_nViewState = DEFAULT_DISPLAY_MODE;
-	
+	oniFile.assign("oni/");
+	oniFile.append(filename);
+
+
 	outputIdx = 0;
 	for(int i = 0 ; i < 30 ; i ++)	outputName[i] = '\0';
 }
@@ -47,22 +50,65 @@ XnStatus TYKinect :: Init(bool depthNode, bool imageNode){	//Kinect Routines (Co
 	status = context.Init();
 	CHECK_RC(status, "context init");
 	if(status != XN_STATUS_OK)	return status;
-	
+
+	/* >>>>> Acquisition from device*/
+
+	/* Depth Node Initialization */
 	if(depthNode){
 		status = depth.Create(context);
 		CHECK_RC(status, "create depth generator");
-		if(status != XN_STATUS_OK)	return status;		// if there's no device connected, the code will crash at the line below
-		status = depth.SetMapOutputMode(outputMode);	//640, 480, 30fps
-		CHECK_RC(status, "set output mode");
-		if(status == XN_STATUS_OK)	hasDepthNode = true;
+		if(status == XN_STATUS_OK){
+			status = depth.SetMapOutputMode(outputMode);	//640, 480, 30fps
+			CHECK_RC(status, "set output mode");
+			if(status == XN_STATUS_OK)	hasDepthNode = true;
+		}
 	}
-	
+	/* Depth Node Initialization */
 	if(imageNode){
 		status = image.Create(context);
 		CHECK_RC(status, "create image generator");
-		status = image.SetMapOutputMode(outputMode);	//640, 480, 30fps
-		CHECK_RC(status, "set output mode");
+		if(status == XN_STATUS_OK){
+			status = image.SetMapOutputMode(outputMode);	//640, 480, 30fps
+			CHECK_RC(status, "set output mode");
+			if(status == XN_STATUS_OK)	hasImageNode = true;
+		}
+	}
+	
+
+	/* >>>>> Acquisition from file*/
+
+	if(!(hasDepthNode||hasImageNode)){
+		EnumerationErrors errors;
+		printf("Trying to create node from oni file\n");
+		status = context.OpenFileRecording(oniFile.c_str());
+ 		CHECK_RC(status,"Open input file");
+		
+		if (status == XN_STATUS_NO_NODE_PRESENT)
+		{
+			XnChar strError[1024];
+			errors.ToString(strError, 1024);
+			printf("%s\n", strError);
+			return status;
+		}
+		else if (status != XN_STATUS_OK)
+		{
+			printf("Open failed: %s\n", xnGetStatusString(status));
+			return status;
+		}
+	
+		status = context.FindExistingNode(XN_NODE_TYPE_DEPTH, depth);
+		CHECK_RC(status, "Find depth generator");
+		if(status == XN_STATUS_OK)	hasDepthNode = true;
+
+		status = context.FindExistingNode(XN_NODE_TYPE_IMAGE, image);
+		CHECK_RC(status, "Find image generator");
 		if(status == XN_STATUS_OK)	hasImageNode = true;
+
+		if(status != XN_STATUS_OK)
+		{
+			cout << "Initial Failed!! " << endl;
+			return status;
+		}
 	}
 	
 	if(isSyncTwoView && hasImageNode && hasDepthNode)	depth.GetAlternativeViewPointCap().SetViewPoint(image);

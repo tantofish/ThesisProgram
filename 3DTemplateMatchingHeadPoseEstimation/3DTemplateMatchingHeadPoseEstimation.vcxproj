@@ -46,13 +46,13 @@
     <LibraryPath>C:\OpenCV2.3\build\x86\vc10\lib;C:\Program Files (x86)\OpenNI\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ExecutablePath>C:\Program Files (x86)\OpenNI\Bin;C:\OpenCV2.3\build\x86\vc10\bin;$(ExecutablePath)</ExecutablePath>
+    <ExecutablePath>C:\Program Files (x86)\flann\bin;C:\Program Files (x86)\OpenNI\Bin;C:\OpenCV2.3\build\x86\vc10\bin;$(ExecutablePath)</ExecutablePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>C:\Program Files (x86)\OpenNI\Include\;C:\OpenCV2.3\build\include\opencv2;C:\OpenCV2.3\build\include\opencv;C:\OpenCV2.3\build\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Program Files (x86)\OpenNI\Include\;C:\Program Files (x86)\flann\include;C:\OpenCV2.3\build\include;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LibraryPath>C:\OpenCV2.3\build\x86\vc10\lib;C:\Program Files (x86)\OpenNI\Lib;$(LibraryPath)</LibraryPath>
+    <LibraryPath>C:\Program Files (x86)\flann\lib;C:\OpenCV2.3\build\x86\vc10\lib;C:\Program Files (x86)\OpenNI\Lib;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -75,7 +75,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>glut32.lib;glew32.lib;openNI.lib;opencv_core231.lib;opencv_highgui231.lib;opencv_flann231.lib;opencv_imgproc231.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glut32.lib;glew32.lib;openNI.lib;opencv_core231.lib;opencv_highgui231.lib;opencv_imgproc231.lib;flann.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

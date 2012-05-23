@@ -21,9 +21,13 @@ TYCloudMatcher::TYCloudMatcher(){
 	tStep = TRANSLATE_STEP;
 	cvgCtr = 0;
 	isConverged = true;
+
+	query = flann::Matrix<float>(qData, 1, 3);
+
 };
 
 void TYCloudMatcher::buildTree(vector<Point3f> &inCloud, Point3f &inCenter, Point3f &inNose){
+	/*
 	dstCloud.clear();
 	dstCloud.insert(dstCloud.end(), inCloud.begin(), inCloud.end());
 	dstCenter = inCenter;
@@ -32,22 +36,46 @@ void TYCloudMatcher::buildTree(vector<Point3f> &inCloud, Point3f &inCenter, Poin
 	TYTimer timer;
 	timer.timeInit();
 	cout << "Building Destination Tree... " ;
-	cv::flann::KDTreeIndexParams indexParams;
 	
-	kdtree.build(cv::Mat(dstCloud).reshape(1), indexParams);
+	kdtree.build(cv::Mat(dstCloud).reshape(1), cv::flann::KDTreeIndexParams());
 	timer.timeReportMS();
+	*/
+	TYTimer timer;
+	dstCenter = inCenter;
+	dstNose = inNose;
+	cout << "Uploading Point Cloud Data... " ;
+	timer.timeInit();
+	int nPoints = (int)inCloud.size();
+	float *data = new float [nPoints*3];
+	for(int i = 0 ; i < nPoints ; i++){
+		data[i*3+0] = inCloud[i].x;
+		data[i*3+1] = inCloud[i].y;
+		data[i*3+2] = inCloud[i].z;
+	}
+	dataset = flann::Matrix<float>(data,nPoints,3);
+	timer.timeReportMS();
+
+	cout << "Building Destination KD Tree... " ;
+	timer.timeInit();
+	kdtree = new flann::Index<flann::L2<float> >(dataset, flann::KDTreeSingleIndexParams());
+	kdtree->buildIndex();
+	timer.timeReportMS();
+
 }
 
-void TYCloudMatcher::match(cv::Vec6f &pose, const std::vector<cv::Point3f> &pCloud, const cv::Point3f &nose){
+void TYCloudMatcher::match(cv::Vec6f &pose, Vec3f &vecOM, const std::vector<cv::Point3f> &pCloud, const cv::Point3f &nose){
 	if(!isConverged)	return;
 	
-
-	Vec3f vecOM(dstNose.x - nose.x, dstNose.y - nose.y, dstNose.z - nose.z);
+	
+	vecOM[0] = dstNose.x - nose.x;
+	vecOM[1] = dstNose.y - nose.y;
+	vecOM[2] = dstNose.z - nose.z;
+	printf("vecOM(%.2f,%.2f,,%.2f,)\n",vecOM[0],vecOM[1],vecOM[2]);
 
 	argCurrent = pose;
-	argCurrent[3] = vecOM[0];
-	argCurrent[4] = vecOM[1];
-	argCurrent[5] = vecOM[2];
+	argCurrent[3] += vecOM[0];
+	argCurrent[4] += vecOM[1];
+	argCurrent[5] += vecOM[2];
 	//printf("Steepest Gradient Idx = %d\n", bestMatchIdx);
 	isConverged = false;
 
@@ -75,6 +103,9 @@ void TYCloudMatcher::match(cv::Vec6f &pose, const std::vector<cv::Point3f> &pClo
 		glutPostRedisplay();
 	}
 
+	argCurrent[3] -= vecOM[0];
+	argCurrent[4] -= vecOM[1];
+	argCurrent[5] -= vecOM[2];
 	pose = argCurrent;
 	printf("pose(%.2f, %.2f, %.2f, %.2f, %.2f, %.2f)\n", pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]);
 };
@@ -114,8 +145,8 @@ int TYCloudMatcher::bestDirection(const std::vector<cv::Point3f> &pCloud, const 
 			argCurrent[i] = argCurrent[i] + gradient[idx][i]*step;
 
 
-	printf("	Step:(%.1f, %.1f, %.1f, %.1f, %.1f, %.1f), (idx, min) = (%d, %.2f) \n",	
-		argCurrent[0], argCurrent[1], argCurrent[2], argCurrent[3], argCurrent[4], argCurrent[5], idx, min);	
+	//printf("	Step:(%.1f, %.1f, %.1f, %.1f, %.1f, %.1f), (idx, min) = (%d, %.2f) \n",	
+	//	argCurrent[0], argCurrent[1], argCurrent[2], argCurrent[3], argCurrent[4], argCurrent[5], idx, min);	
 
 	return idx;
 };
@@ -126,27 +157,47 @@ float TYCloudMatcher::energy(const std::vector<cv::Point3f> &pCloud){
 	float distSum = 0.f;
 	
 	//float distThresh = 10.f;
-	
+	TYTimer timer;
 	//#pragma omp parallel for reduction(+:distSum)
-	for(int queryIdx = 0 ; queryIdx < pCloud.size() ; queryIdx++){
-		
-		vector<float> query(3);
-		query[0] = pCloud[queryIdx].x;
-		query[1] = pCloud[queryIdx].y;
-		query[2] = pCloud[queryIdx].z;
+	//for(int queryIdx = 0 ; queryIdx < pCloud.size() ; queryIdx++){
+	//	
+	//	vector<float> query(3);
+	//	query[0] = pCloud[queryIdx].x;
+	//	query[1] = pCloud[queryIdx].y;
+	//	query[2] = pCloud[queryIdx].z;
 
-		int knn = 1;
-		vector<int> indices(knn);
-		vector<float> dists(knn);
+	//	int knn = 1;
+	//	vector<int> indices(knn);
+	//	vector<float> dists(knn);
 
+	//	//timer.timeInit();
+	//	kdtree.knnSearch(query, indices, dists, knn, flann::SearchParams(32));
+	//	//timer.timeReportMS();
+
+	//	distSum = distSum + dists[0];
+	//	
+	//}
+
+	int knn = 1;	
+	flann::Matrix<int> indices(new int[query.rows*knn], query.rows, knn);
+	flann::Matrix<float> dists(new float[query.rows*knn], query.rows, knn);
+
+	for(unsigned int queryIdx = 0 ; queryIdx < pCloud.size() ; queryIdx++){
 		
-		kdtree.knnSearch(query, indices, dists, knn, flann::SearchParams(32));
-		
-		distSum = distSum + dists[0];
+		query[0][0] = pCloud[queryIdx].x;
+		query[0][1] = pCloud[queryIdx].y;
+		query[0][2] = pCloud[queryIdx].z;
+
+		//timer.timeInit();
+		kdtree->knnSearch(query, indices, dists, knn, flann::SearchParams(32));
+		//timer.timeReportMS();
+
+		distSum = distSum + dists[0][0];
 		
 	}
 
-
+	delete [] indices.ptr();
+	delete [] dists.ptr();
 	//printf("par[6]=(%.1f, %.1f, %.1f, %.1f, %.1f, %.1f)	inlier: %d\n", mtYaw, mtPitch, mtRoll, mtTransX, mtTransY, mtTransZ, inlierCount);
 	//printf("inlier: %d, distSum: %.2f, nSamples: %d\n", inlierCount, distSum, nSamples);
 	return distSum;

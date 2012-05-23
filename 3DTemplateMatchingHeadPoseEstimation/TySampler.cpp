@@ -8,6 +8,8 @@ TYSampler::TYSampler(){
 	areaW = SAMPLE_AREA_WIDTH;
 	areaH = SAMPLE_AREA_HEIGHT;
 	noseSmoothTerm = true;
+	a = 0;
+	b = 0;
 }
 
 void TYSampler::setSampleArea(float width, float height){
@@ -175,7 +177,6 @@ void TYSampler::findNoseTip(const Mat &depthRAW, const Vec6f &pose){
 				irCloud.push_back(Point3f(X,Y,Z));
 				pcIndex.push_back(Point2i(x,y));
 
-				if((y > (ly - nwY)) && (y <(ly + nwY)) && (x > (lx - nwX)) && (x <(lx + nwX)) )
 				if(Z < nearest){
 					nearest = Z;
 					nose2i.x = x;
@@ -234,9 +235,9 @@ void TYSampler::findNoseTip(const Mat &depthRAW, const Vec6f &pose){
 					sum2f.x += pcIndex[i].x;
 					sum2f.y += pcIndex[i].y;
 
-					sum3f.x += (IMG_W_HALF - pcIndex[i].x) * ((float) irCloud[i].z) * _f;
-					sum3f.y += (IMG_H_HALF - pcIndex[i].y) * ((float) irCloud[i].z) * _f;
-					sum3f.z += (float) irCloud[i].z;
+					sum3f.x += (IMG_W_HALF - pcIndex[i].x) * ((float) orCloud[i].z) * _f;
+					sum3f.y += (IMG_H_HALF - pcIndex[i].y) * ((float) orCloud[i].z) * _f;
+					sum3f.z += (float) orCloud[i].z;
 
 					pNum++;
 				}
@@ -255,6 +256,8 @@ void TYSampler::findNoseTip(const Mat &depthRAW, const Vec6f &pose){
 }
 
 void TYSampler::drawSamples2i(Mat &image){
+	if(nose2i.x < 0 || nose2i.x > 640)	return;
+
 	// Draw the Nose Searching Window on the "depthRGB" image
 	Rect rect(nose2i.x - nwX, nose2i.y - nwY, 2*nwX, 2*nwY);
 	rectangle(image, rect, CV_RGB(0,128,255));

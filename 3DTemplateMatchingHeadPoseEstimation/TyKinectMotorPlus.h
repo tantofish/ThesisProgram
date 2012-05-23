@@ -2,8 +2,10 @@
 #define _CLNUI_LIB_
 #define _CRT_SECURE_NO_WARNINGS
 
+
 #include <CLNUIDevice.h>
 #include "TyKinect.h"
+
 
 #pragma comment( lib, "CLNUIDevice")
 

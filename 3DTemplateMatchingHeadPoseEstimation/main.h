@@ -5,9 +5,13 @@
 //-------------------------------------------------------------
 // Includes
 //-------------------------------------------------------------
+
+#include <flann\flann.hpp>
+
 #include <XnOS.h>
 #include <XnCppWrapper.h>
 using namespace xn;
+
 
 #include <windows.h>
 #include <process.h>
@@ -21,11 +25,17 @@ using namespace xn;
 #include <vector>
 #include <utility>
 #include <iterator>
+
 using namespace std;
 
-#include <opencv\cv.h>
+//#include <opencv\cv.h>
+
+
+
 #include <opencv\cxcore.h>
 #include <opencv\highgui.h>
+#include <opencv2\imgproc\imgproc.hpp>
+
 using namespace cv;		//cv must be put after std, (I don't know why. tantofish.)
 
 //-------------------------------------------------------------
@@ -104,8 +114,8 @@ using namespace cv;		//cv must be put after std, (I don't know why. tantofish.)
 /*   Model Loader Parameters     */
 /*-------------------------------*/
 //#define MODEL_FILENAME "models\\full_auto_2_16_27_44_57_72_avg1.2.txt"
-#define MODEL_FILENAME "models\\data3_1_36_106_121.txt"
-//#define MODEL_FILENAME "models\\1.txt"
+//#define MODEL_FILENAME "models\\data3_1_36_106_121.txt"
+#define MODEL_FILENAME "models\\1.txt"
 
 #define DRAW_MODEL_NOSE
 #define AVG_NOSE
@@ -123,10 +133,11 @@ using namespace cv;		//cv must be put after std, (I don't know why. tantofish.)
 /*   Sampler Parameters		     */
 /*-------------------------------*/
 #define NOSE_WINDOW_X		20
-#define NOSE_WINDOW_Y		10
+#define NOSE_WINDOW_Y		15
 #define START_DELAY			15
-#define	SAMPLE_AREA_WIDTH	30
-#define	SAMPLE_AREA_HEIGHT	30
+#define SAMPLE_NUMBER		40
+#define	SAMPLE_AREA_WIDTH	40
+#define	SAMPLE_AREA_HEIGHT	40
 
 /*-------------------------------*/
 /*  Self Defined Data Structure  */

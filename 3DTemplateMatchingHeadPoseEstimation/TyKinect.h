@@ -54,7 +54,7 @@ public:
 	/*-------------------------------------------*/
 	/* Public Member Functions                   */
 	/*-------------------------------------------*/
-	TYKinect(bool syncTwoVeiw = true, bool mirroring = true);
+	TYKinect(bool syncTwoVeiw = true, bool mirroring = true, char *filename = "");
 	~TYKinect();
 
 	XnStatus Init(bool depthNode = true, bool imageNode = true);
@@ -89,6 +89,8 @@ private:
 	int height;
 	int fps;
 	bool antiFlickerCap;
+	string oniFile;
+
 	XnUInt64 focalLength;
 	XnDouble pixelSize;
 
