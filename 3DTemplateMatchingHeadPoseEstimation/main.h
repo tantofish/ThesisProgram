@@ -20,6 +20,7 @@ using namespace xn;
 
 #include <cstdlib>
 #include <cstdio>
+#include <cmath>
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -28,15 +29,17 @@ using namespace xn;
 
 using namespace std;
 
-//#include <opencv\cv.h>
-
-
-
 #include <opencv\cxcore.h>
 #include <opencv\highgui.h>
 #include <opencv2\imgproc\imgproc.hpp>
 
 using namespace cv;		//cv must be put after std, (I don't know why. tantofish.)
+
+//---------
+// control
+//---------
+#define USE_BIWI
+//#define EDIT_BIWI
 
 //-------------------------------------------------------------
 // Definitions
@@ -73,7 +76,10 @@ using namespace cv;		//cv must be put after std, (I don't know why. tantofish.)
 #define _CC_G	0.2f
 #define _CC_B	0.2f
 #define _CC_A	0.2f
-
+//#define _CC_R	1.f
+//#define _CC_G	1.f
+//#define _CC_B	1.f
+//#define _CC_A	1.f
 
 /*-------------------------------*/
 /*       Kinect Parameters       */
@@ -103,7 +109,7 @@ using namespace cv;		//cv must be put after std, (I don't know why. tantofish.)
 #define OPMODE_CROP		1
 #define OPMODE_SELECT	2
 
-//#define DEVICE_KIENCT
+#define DEVICE_KIENCT
 #ifdef DEVICE_KINECT
 	#define FOCAL_LEN 575.82f
 #else
@@ -115,7 +121,9 @@ using namespace cv;		//cv must be put after std, (I don't know why. tantofish.)
 /*-------------------------------*/
 //#define MODEL_FILENAME "models\\full_auto_2_16_27_44_57_72_avg1.2.txt"
 //#define MODEL_FILENAME "models\\data3_1_36_106_121.txt"
-#define MODEL_FILENAME "models\\1.txt"
+//#define MODEL_FILENAME "models\\1.txt"
+#define MODEL_FILENAME "models\\biwi_01.txt"
+#define DB_SET	1
 
 #define DRAW_MODEL_NOSE
 #define AVG_NOSE
@@ -133,7 +141,7 @@ using namespace cv;		//cv must be put after std, (I don't know why. tantofish.)
 /*   Sampler Parameters		     */
 /*-------------------------------*/
 #define NOSE_WINDOW_X		20
-#define NOSE_WINDOW_Y		15
+#define NOSE_WINDOW_Y		10
 #define START_DELAY			15
 #define SAMPLE_NUMBER		40
 #define	SAMPLE_AREA_WIDTH	40
@@ -142,17 +150,19 @@ using namespace cv;		//cv must be put after std, (I don't know why. tantofish.)
 /*-------------------------------*/
 /*  Self Defined Data Structure  */
 /*-------------------------------*/
-class TYPose{
-public:
-	float yaw, pitch, roll;
-	float x, y, z;
-	
-	TYPose():yaw(0.f), pitch(0.f), roll(0.f), x(0.f), y(0.f), z(0.f){}
-	
-	void set(TYPose pose){	
-		yaw = pose.yaw;		pitch = pose.pitch;		roll = pose.roll;
-		x = pose.x;			y = pose.y;				z = pose.z;
-	}
-};
+//class TYPose{
+//public:
+//	float yaw, pitch, roll;
+//	float x, y, z;
+//	
+//	TYPose():yaw(0.f), pitch(0.f), roll(0.f), x(0.f), y(0.f), z(0.f){}
+//	
+//	void set(TYPose pose){	
+//		yaw = pose.yaw;		pitch = pose.pitch;		roll = pose.roll;
+//		x = pose.x;			y = pose.y;				z = pose.z;
+//	}
+//};
+
+
 
 #endif

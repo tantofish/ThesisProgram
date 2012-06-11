@@ -80,6 +80,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="TyBiwiReader.cpp" />
     <ClCompile Include="TyCloudDrawer.cpp" />
     <ClCompile Include="TyCloudMatcher.cpp" />
     <ClCompile Include="TyHeadPoseEstimation.cpp" />
@@ -88,9 +89,11 @@
     <ClCompile Include="TyModelLoader.cpp" />
     <ClCompile Include="TySampler.cpp" />
     <ClCompile Include="TyTimer.cpp" />
+    <ClCompile Include="TyVariables.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="main.h" />
+    <ClInclude Include="TyBiwiReader.h" />
     <ClInclude Include="TyCloudDrawer.h" />
     <ClInclude Include="TyCloudMatcher.h" />
     <ClInclude Include="TyHeadPoseEstimation.h" />
@@ -99,6 +102,7 @@
     <ClInclude Include="TyModelLoader.h" />
     <ClInclude Include="TySampler.h" />
     <ClInclude Include="TyTimer.h" />
+    <ClInclude Include="TyVariables.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

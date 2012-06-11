@@ -24,7 +24,7 @@ bool TYCloudDrawer::getHistogram(vector<Point3f> &cloud){
 	}
 
 	// Histogram Computing
-	for (int i = 0 ; i < nPoints ; i++){
+	for (unsigned int i = 0 ; i < nPoints ; i++){
 		int val = (int)cloud[i].z;
 		
 
@@ -57,6 +57,7 @@ void TYCloudDrawer::drawPointCloud(vector<Point3f> &cloud){
 	ttt.timeInit();
 #endif
 	unsigned int nPoints = cloud.size();
+	
 	glBegin(GL_POINTS);
 	for (int i = 0 ; i < nPoints ; i++){
 		int val = (int)cloud[i].z;
@@ -68,6 +69,7 @@ void TYCloudDrawer::drawPointCloud(vector<Point3f> &cloud){
 		
 	}
 	glEnd();
+	
 #ifdef DRAW_TIME
 	printf("draw ");
 	ttt.timeReportMS();

@@ -2,6 +2,8 @@
 #include "TyTimer.h"
 
 bool TYHeadModel::mReadModel(char* filename){
+	Point3f max(-9999999999,-9999999999,-9999999999), min(9999999999,9999999999,9999999999);
+
 	cout << "Loading model : " << filename << endl ;
 	
 	ifstream file(filename); 
@@ -36,6 +38,8 @@ bool TYHeadModel::mReadModel(char* filename){
 	center.x = sx/nPoints;
 	center.y = sy/nPoints;
 	center.z = sz/nPoints;
+
+	
 
 	file.close(); 
 	//printf("# of points : %d  ", pointCloud.size());

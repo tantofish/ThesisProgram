@@ -5,10 +5,15 @@
 #include "TySampler.h"
 #include "TyCloudMatcher.h"
 #include "TyCloudDrawer.h"
+#include "TyBiwiReader.h"
+#include "TyVariables.h"
 
 TYGLVariables glVars;
+TYSysVariables sysVars;
+
 TYTimer myTimerGL;
-TYKinect kinect(true, true, "still.oni");
+TYKinect kinect(true, true, "female.oni");
+TYBiwiDB biwi("C:\\Users\\Tantofish\\Master\\kinect_head_pose_db");
 TYHeadModel myHead;
 TYSampler sampler;
 TYCloudMatcher matcher;
@@ -16,21 +21,23 @@ TYCloudMatcher matcher;
 TYCloudDrawer modelDrawer;
 TYCloudDrawer observeDrawer;
 
-// πÍ≈Á•Œ
-Vec6f pose(0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
-Vec3f vecOM(0.f, 0.f, 0.f);
-
-bool doMatch = false;
-
+float nFrames = 0;
+float under5cnt = 0;
+float under10cnt = 0;
+float under15cnt = 0;
+float under20cnt = 0;
 
 void ProgramStart(){
 	printf("Head Motion Tracking Progeam Started!!! \n");
 	glutInitDisplayMode(GLUT_RGB | GL_DOUBLE);
+	// Window 1
 	glutInitWindowSize(GL_WIN_SIZE_X, GL_WIN_SIZE_Y);
-	glutInitWindowPosition(GL_WIN_PIVOT_X, GL_WIN_PIVOT_Y);
-	int WindowNum = glutCreateWindow("Head Motion Tracking");
+	//glutInitWindowPosition(GL_WIN_PIVOT_X, GL_WIN_PIVOT_Y);
+	int WindowNum1 = glutCreateWindow("Head Motion Tracking");
 	myInitial();  
+#ifndef EDIT_BIWI
 	glutIdleFunc(myIdle);
+#endif
 	glutReshapeFunc(myReshape);
 	glutDisplayFunc(myDisplay);
 	glutKeyboardFunc(myKey);
@@ -40,15 +47,39 @@ void ProgramStart(){
 }
 
 void myDisplay(){
+	
 	myTimerGL.timeInit();		// time calculation head
 	
-	/* Sensor Input: Kinect Grab One Frame Set <Depth, RGB> */
-	XnStatus kinectStatus = kinect.GetMetaData();
+	if(!sysVars.isPause){
+#ifdef USE_BIWI
+		/* Database Input: use biwi database */
+		biwi.getNextFrame();
+#ifdef EDIT_BIWI
+		biwi.genPC();
+#endif
+#else
+		/* Sensor Input: Kinect Grab One Frame Set <Depth, RGB> */
+		XnStatus kinectStatus = kinect.GetMetaData();
 
-	if(kinectStatus == XN_STATUS_OK){
-		kinect.GetCvFormatImages();
-	}
+		if(kinectStatus == XN_STATUS_OK){
+			kinect.GetCvFormatImages();
+		}
+#endif
+
 	
+	/*
+	 *	Program Body
+	 */
+
+	#ifdef USE_BIWI
+		sampler.randomSampling(biwi.DepthRAW, sysVars.pose, SAMPLE_NUMBER);
+	#else
+		sampler.randomSampling(kinect.DepthRAW, sysVars.pose, SAMPLE_NUMBER);
+	#endif
+		if(sysVars.doMatch)	matcher.match(sysVars.pose, sysVars.vecOM, sampler.sample3f, sampler.nose3f);
+	
+	}
+
 	/* GL ModelView Matrix Reset */
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -56,10 +87,7 @@ void myDisplay(){
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 	glClearColor(_CC_R, _CC_G, _CC_B, _CC_A);
 
-	/* Put FPS String Onto The GL Window */
-	myGlPutText(-0.95f, -0.95f, myTimerGL.FPSstring(), GLUT_BITMAP_HELVETICA_18, 1.0f, 0.0f, 0.0f, 1.0f);
-
-	/* Viewing Deformations (Camera Move) */
+	/* Viewing(UI) Transformations (Camera Move) */
 	glTranslatef(glVars.uiTransX, glVars.uiTransY, glVars.uiTransZ);
 	glTranslatef(myHead.center.x, myHead.center.y, myHead.center.z);		// Still need to set camera rotate pivot here
 	glRotatef(glVars.uiPitch, 1, 0, 0);
@@ -68,37 +96,84 @@ void myDisplay(){
 	glScalef(glVars.uiScale, glVars.uiScale, glVars.uiScale);
 	glTranslatef(-myHead.center.x, -myHead.center.y, -myHead.center.z);
 
-	
-	/*
-	 *	Program Body
-	 */
-
-
-	sampler.randomSampling(kinect.DepthRAW, pose, SAMPLE_NUMBER);
-	if(doMatch)	matcher.match(pose, vecOM, sampler.sample3f, sampler.nose3f);
-	
-
+	/* draw head model with the estimated motion parameters */
 	glPushMatrix();
 		glTranslatef(myHead.nose.x, myHead.nose.y, myHead.nose.z);		// Still need to set camera rotate pivot here
-	
-		glTranslatef(-pose[3]-vecOM[0], -pose[4]-vecOM[1], -pose[5]-vecOM[2]);	// x, y, z
-		glRotatef(-pose[0], 0, 1, 0);	// yaw
-		glRotatef(-pose[1], 1, 0, 0);	// pitch
-		glRotatef(-pose[2], 0, 0, 1);	// roll
-	
+		glTranslatef(	-sysVars.pose[3]-sysVars.vecOM[0],
+						-sysVars.pose[4]-sysVars.vecOM[1], 
+						-sysVars.pose[5]-sysVars.vecOM[2]);	// x, y, z
+		glRotatef(-sysVars.pose[0], 0, 1, 0);	// yaw
+		glRotatef(-sysVars.pose[1], 1, 0, 0);	// pitch
+		glRotatef(-sysVars.pose[2], 0, 0, 1);	// roll
 		glTranslatef(-myHead.nose.x, -myHead.nose.y, -myHead.nose.z);
 
-		myHead.drawNose();
-		modelDrawer.drawPointCloud(myHead.pointCloud);
-
+		myHead.drawNose();	// Nose Vertex
+#ifndef EDIT_BIWI
+		modelDrawer.drawPointCloud(myHead.pointCloud);	// Head Point Cloud
+#else
+		modelDrawer.getHistogram(biwi.point);
+		modelDrawer.drawPointCloud(biwi.point);
+#endif
 	glPopMatrix();
 
-	sampler.drawSamples2i(kinect.DepthRGB);
 	sampler.drawSamples3f();
 
+#ifdef USE_BIWI
+	sampler.drawSamples2i(biwi.DepthRGB);
+	biwi.Show();
+	int key = waitKey(1);
+	biwi.RegisterKey(key);
+
+	if(biwi.isFirstFrame){
+		biwi.isFirstFrame = false;
+		sysVars.pause();
+	}
+#else
+	sampler.drawSamples2i(kinect.DepthRGB);
 	kinect.Show(true, true);
 	int key = waitKey(1);
 	kinect.RegisterKey(key);
+#endif
+
+	
+	
+	/* Put FPS String Onto The GL Window */
+	myGlPutText(-0.95f, -0.95f, myTimerGL.FPSstring(), GLUT_BITMAP_HELVETICA_18, 1.0f, 0.0f, 0.0f, 1.0f);
+	myGlPutText(-0.95f, 0.9f, sysVars.poseString(), GLUT_BITMAP_HELVETICA_18, 1.0f, 1.0f, 0.0f, 1.0f);
+
+	float Ye = sysVars.pose[0];	float Ygt = biwi.pose[0];
+	float Pe = sysVars.pose[1]; float Pgt = biwi.pose[1];
+	float Re = -sysVars.pose[2]; float Rgt = biwi.pose[2];
+	
+	Point3f pp = (sampler.nose3f - biwi.nose);
+	
+	float noseErr = sqrt(pp.x*pp.x+pp.y*pp.y+pp.z*pp.z);
+	float angularErr = sqrt((Ye-Ygt)*(Ye-Ygt) + (Re-Rgt)*(Re-Rgt) + (Pe-Pgt)*(Pe-Pgt));
+	float angularErrNoRoll = sqrt((Ye-Ygt)*(Ye-Ygt)+(Pe-Pgt)*(Pe-Pgt));
+	char noseErrMsg[100], angErrMsg[100], angErrNoRollMsg[100];
+	sprintf(noseErrMsg,		 "Nose Position Error : %.2f (mm)", noseErr);
+	sprintf(angErrMsg,		 "Angular Error : %.2f ", angularErr);
+	sprintf(angErrNoRollMsg, "Angular Error (No Roll): %.2f ", angularErrNoRoll);
+	myGlPutText(-0.95f, 0.85f, noseErrMsg, GLUT_BITMAP_HELVETICA_12, 0.0f, 1.0f, 1.0f, 1.0f);
+	myGlPutText(-0.95f, 0.80f, angErrMsg, GLUT_BITMAP_HELVETICA_12, 0.0f, 1.0f, 1.0f, 1.0f);
+	myGlPutText(-0.95f, 0.75f, angErrNoRollMsg, GLUT_BITMAP_HELVETICA_12, 0.0f, 1.0f, 1.0f, 1.0f);
+
+	if(!sysVars.isPause){
+		if(angularErrNoRoll < 5)	under5cnt++;
+		if(angularErrNoRoll < 10)	under10cnt++;
+		if(angularErrNoRoll < 15)	under15cnt++;
+		if(angularErrNoRoll < 20)	under20cnt++;
+		nFrames++;
+		printf("Acc(%.2f, %.2f, %.2f, %.2f)\n", under5cnt/nFrames, under10cnt/nFrames, under15cnt/nFrames, under20cnt/nFrames);
+		//printf("AErr = %.2f, AErrNoRoll = %.2f, NErr = %.2f \n", angularErr, angularErrNoRoll, noseErr);
+		if(angularErr < 0 || angularErr > 1000)	system("pause");
+	}
+	glPushMatrix();
+		glColor3f(0, 1.0, 0);
+		glTranslatef(biwi.nose.x, biwi.nose.y, biwi.nose.z);
+		glutSolidSphere (5,5,5);	
+	glPopMatrix();
+
 
 	glutSwapBuffers();
 	myTimerGL.sprintFPS();		// time calculation tail
@@ -134,8 +209,13 @@ void myInitial(){
 	/*
 	 * Project Specific Works' own initialization
 	 */
+#ifdef USE_BIWI
+	biwi.Init(DB_SET,0);
+	biwi.setCrop(500, 1500, 80, 560, 80, 400);
+#else
 	XnStatus status = kinect.Init();
-	kinect.setCrop(0, 840, 80, 560, 80, 400);
+	kinect.setCrop(0, 1000, 80, 560, 80, 400);
+#endif
 	myHead.mReadModel(MODEL_FILENAME);
 	myHead.findNose();
 	modelDrawer.getHistogram(myHead.pointCloud);
@@ -152,15 +232,72 @@ void myReshape(GLint w, GLint h){
 	glViewport(0,0,w,h);
 }
 
+void myGLimwrite(){
+	int glW = glutGet(GLUT_WINDOW_WIDTH);
+	int glH = glutGet(GLUT_WINDOW_HEIGHT);
+	Mat src(glH, glW, CV_8UC3);
+	Mat flipped;
+	glReadPixels(0, 0, glW, glH, GL_BGR, GL_UNSIGNED_BYTE, (void*) src.data);
+	cv::flip(src, flipped, 0);
+	imwrite("./output/oout.png", flipped);
+}
+
 void myKey(GLubyte key, GLint x, GLint y){
 	//printf("key = %x, x = %d, y = %d\n",key,x,y);
 	//mMaker.registerKey(key);
 	//glutPostRedisplay();
+	
 	switch(key){
-	case '=':	doMatch = true;	break;
-	case 'r':	sampler.reset();	break;
+	case '=':	sysVars.turnOnOffMatch();	break;
+	case 'r':	
+		sampler.reset();	
+		glVars.reset();
+		sysVars.reset();
+		break;
 	case 'n':	sampler.switchNoseSmooth();	break;
+	case '/':
+		sampler.reset();	
+		sysVars.reset();
+		biwi.nextSet();
+		sysVars.isPause = false;
+		break;
+	case 't':	// test : now is glImWrite
+		myGLimwrite();
+		break;
+	/* SPACE: Pause this program */
+	case 32:	sysVars.pause();	break;
+	/* ESC: End this program */
+	case 27:	exit(0);	break;
+
+#ifdef EDIT_BIWI
+	case 'a':	
+		biwi.bOffset += 10;	
+		biwi.genPC();	
+		printf("bOffset = %d\n", biwi.bOffset);
+		break;
+	case 's':	
+		biwi.bOffset -= 10;	
+		biwi.genPC();	
+		printf("bOffset = %d\n", biwi.bOffset);
+		break;
+	case 'z':	
+		biwi.aOffset += 10;	
+		biwi.genPC();	
+		printf("aOffset = %d\n", biwi.aOffset);
+		break;
+	case 'x':	
+		biwi.aOffset -= 10;	
+		biwi.genPC();	
+		printf("aOffset = %d\n", biwi.aOffset);
+		break;
+	case 'm':
+		printf("write model");
+		biwi.mWriteModel();
+		break;
+#endif
+	
 	}
+	glutPostRedisplay();
 }
 
 void myMouse(int button, int state, int x, int y){
@@ -169,7 +306,7 @@ void myMouse(int button, int state, int x, int y){
 	glVars.msSta = state;
 	glVars.msX = x;
 	glVars.msY = y;
-	//glutPostRedisplay();
+	glutPostRedisplay();
 }
 
 void myMotion(int x, int y){
@@ -201,7 +338,7 @@ void myMotion(int x, int y){
 	glVars.msX = x;
 	glVars.msY = y;
 
-	//glutPostRedisplay();
+	glutPostRedisplay();
 }
 
 void myIdle(){
@@ -313,3 +450,5 @@ void myGlPutText(float x, float y, char* text, LPVOID font, float r, float g, fl
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
 }
+
+

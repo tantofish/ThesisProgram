@@ -66,6 +66,8 @@ bool TYSampler::randomSampling(const Mat &depthRAW, const Vec6f &pose, const int
 			if(pZ != 0){
 				float pX = (IMG_W_HALF-(nose2i.x+X))*pZ*_f;
 				float pY = (IMG_H_HALF-(nose2i.y+Y))*pZ*_f;
+				if(sqrt((nose3f.x-pX)*(nose3f.x-pX)+(nose3f.y-pY)*(nose3f.y-pY)+(nose3f.z-pZ)*(nose3f.z-pZ))>50)	continue;
+
 				sample3f.push_back( Point3f(pX,pY,pZ));
 				sumX += pX;
 				sumY += pY;
@@ -296,13 +298,19 @@ void TYSampler::drawSamples3f(){
 			glVertex3f(irCloud[i].x, irCloud[i].y, irCloud[i].z);
 	glEnd();*/
 	
-
+	
 	glPointSize(4.0);
 	glBegin(GL_POINTS);
 		glColor3f(0.f, 1.f, 0.f);
 		glVertex3f(nose3f.x, nose3f.y, nose3f.z);
 	glEnd();
 	glPointSize(1.0);
+	
+	/*glPushMatrix();
+	glTranslatef(nose3f.x,nose3f.y,nose3f.z);
+	glColor3f(0.f,0.f,1.f);
+	glutSolidSphere(50,10,10);
+	glPopMatrix();*/
 }
 
 void TYSampler::reset(){

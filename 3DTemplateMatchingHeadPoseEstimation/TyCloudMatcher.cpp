@@ -70,7 +70,7 @@ void TYCloudMatcher::match(cv::Vec6f &pose, Vec3f &vecOM, const std::vector<cv::
 	vecOM[0] = dstNose.x - nose.x;
 	vecOM[1] = dstNose.y - nose.y;
 	vecOM[2] = dstNose.z - nose.z;
-	printf("vecOM(%.2f,%.2f,,%.2f,)\n",vecOM[0],vecOM[1],vecOM[2]);
+	//printf("vecOM(%.2f,%.2f,,%.2f,)\n",vecOM[0],vecOM[1],vecOM[2]);
 
 	argCurrent = pose;
 	argCurrent[3] += vecOM[0];
@@ -84,7 +84,8 @@ void TYCloudMatcher::match(cv::Vec6f &pose, Vec3f &vecOM, const std::vector<cv::
 		int index = this->bestDirection(pCloud, nose);
 		
 		if(index == 0){
-			if( cvgCtr>=2 || rStep<=0.5f ){
+			//if( cvgCtr>=2 || rStep<=0.5f ){
+			if( cvgCtr>=4 || rStep<=0.02f ){
 				//printf(" matching converged! \n");
 				cvgCtr = 0;
 				rStep = ROTATE_STEP;
@@ -107,7 +108,7 @@ void TYCloudMatcher::match(cv::Vec6f &pose, Vec3f &vecOM, const std::vector<cv::
 	argCurrent[4] -= vecOM[1];
 	argCurrent[5] -= vecOM[2];
 	pose = argCurrent;
-	printf("pose(%.2f, %.2f, %.2f, %.2f, %.2f, %.2f)\n", pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]);
+	//printf("pose(%.2f, %.2f, %.2f, %.2f, %.2f, %.2f)\n", pose[0], pose[1], pose[2], pose[3], pose[4], pose[5]);
 };
 
 int TYCloudMatcher::bestDirection(const std::vector<cv::Point3f> &pCloud, const cv::Point3f &center){

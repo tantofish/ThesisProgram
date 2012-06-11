@@ -5,39 +5,6 @@
 #include "main.h"
 
 
-
-
-class TYGLVariables{
-public:
-	
-	/*
-	 * for user interface : viewing parameters
-	 */
-	float uiPitch;
-	float uiYaw;
-	float uiRoll;
-	float uiTransX;
-	float uiTransY;
-	float uiTransZ;
-	float uiScale;
-	float rotateStep;
-	float translateStep;
-	float scaleStep;
-	// mouse series
-	int msBtn;
-	int msSta;
-	int msX, msY;
-
-
-	GLint winW, winH;
-
-	TYGLVariables() : 
-	uiPitch(0.f), uiYaw(0.f), uiRoll(0.f), 
-	uiTransX(0.f), uiTransY(0.f), uiTransZ(0.f),
-	uiScale(1.f), rotateStep(5.f), translateStep(10.f), scaleStep(0.9f)
-	{}
-};
-
 /* Program start here, setup opengl pipline*/
 void ProgramStart();
 /* Every Frame's Routine Jobs will be executed in this function */
