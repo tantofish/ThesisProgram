@@ -7,5 +7,9 @@ Release*
 3DTemplateMatchingHeadPoseEstimation/Release/*
 3DTemplateMatchingHeadPoseEstimation/models/*
 3DTemplateMatchingHeadPoseEstimation/oni/*
+3DTemplateMatchingHeadPoseEstimation/model_show/*
+3DTemplateMatchingHeadPoseEstimation/output/*
+3DTemplateMatchingHeadPoseEstimation/facial/*
+3DTemplateMatchingHeadPoseEstimation/backup/*
 *.user
 *.filters

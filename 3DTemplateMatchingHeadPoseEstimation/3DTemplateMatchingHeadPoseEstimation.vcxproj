@@ -75,32 +75,44 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>glut32.lib;glew32.lib;openNI.lib;opencv_core231.lib;opencv_highgui231.lib;opencv_imgproc231.lib;flann.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glut32.lib;glew32.lib;glaux.lib;openNI.lib;opencv_core231.lib;opencv_highgui231.lib;opencv_imgproc231.lib;flann.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="GLTexture.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Model_3DS.cpp" />
+    <ClCompile Include="TRIModel.cpp" />
     <ClCompile Include="TyBiwiReader.cpp" />
     <ClCompile Include="TyCloudDrawer.cpp" />
     <ClCompile Include="TyCloudMatcher.cpp" />
+    <ClCompile Include="TyDemoModel.cpp" />
     <ClCompile Include="TyHeadPoseEstimation.cpp" />
     <ClCompile Include="TyKinect.cpp" />
     <ClCompile Include="TyKinectMotorPlus.cpp" />
     <ClCompile Include="TyModelLoader.cpp" />
+    <ClCompile Include="tyObjModel.cpp" />
     <ClCompile Include="TySampler.cpp" />
+    <ClCompile Include="TySmoothFilter.cpp" />
     <ClCompile Include="TyTimer.cpp" />
     <ClCompile Include="TyVariables.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GLTexture.h" />
     <ClInclude Include="main.h" />
+    <ClInclude Include="Model_3DS.h" />
+    <ClInclude Include="TRIModel.h" />
     <ClInclude Include="TyBiwiReader.h" />
     <ClInclude Include="TyCloudDrawer.h" />
     <ClInclude Include="TyCloudMatcher.h" />
+    <ClInclude Include="TyDemoModel.h" />
     <ClInclude Include="TyHeadPoseEstimation.h" />
     <ClInclude Include="TyKinect.h" />
     <ClInclude Include="TyKinectMotorPlus.h" />
     <ClInclude Include="TyModelLoader.h" />
+    <ClInclude Include="tyObjModel.h" />
     <ClInclude Include="TySampler.h" />
+    <ClInclude Include="TySmoothFilter.h" />
     <ClInclude Include="TyTimer.h" />
     <ClInclude Include="TyVariables.h" />
   </ItemGroup>

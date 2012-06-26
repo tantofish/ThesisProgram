@@ -23,7 +23,8 @@ public:
 	void genPC();
 	/* write model*/
 	bool mWriteModel();
-
+	/* reutrn the current frame number */
+	int frame(){return fIdx;}
 
 
 	float currentSet();

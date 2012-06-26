@@ -77,6 +77,14 @@ public:
 	void SaveImages();
 	/* set cropping boundarys  */
 	void setCrop(int n = -1, int f = -1, int l = -1, int r = -1, int t = -1, int b = -1);
+	/* switch mirroring */
+	void switchMirroring();
+
+	// for thesis specific
+	bool isFirstFrame;		// for pause at first frame use
+
+	//CROPPING
+	unsigned int cropL, cropR, cropT, cropB, cropN, cropF;
 private:
 
 	/*-------------------------------------------*/
@@ -89,6 +97,7 @@ private:
 	int height;
 	int fps;
 	bool antiFlickerCap;
+	
 	string oniFile;
 
 	XnUInt64 focalLength;
@@ -115,8 +124,7 @@ private:
 
 	int opMode;	// Operation Mode
 
-	//CROPPING
-	unsigned int cropL, cropR, cropT, cropB, cropN, cropF;
+	
 
 	//Globals
 	unsigned int g_pDepthHist[MAX_DEPTH];

@@ -35,11 +35,7 @@ using namespace std;
 
 using namespace cv;		//cv must be put after std, (I don't know why. tantofish.)
 
-//---------
-// control
-//---------
-#define USE_BIWI
-//#define EDIT_BIWI
+
 
 //-------------------------------------------------------------
 // Definitions
@@ -48,38 +44,62 @@ using namespace cv;		//cv must be put after std, (I don't know why. tantofish.)
 #define toRad(x) ((x)*0.01745329251994)
 #define toDeg(x) ((x)*57.2957795130823)
 #define OUT_OF_BOUNDARY(x,y) (((x) < 0) || ((y) < 0) || ((x) > IMG_W) || ((y) > IMG_H))
+
+
+//---------
+// control
+//---------
+//#define USE_BIWI
+//#define BIWI_READ_COLOR
+//#define EDIT_BIWI
+
+//#define OUTPUT_NOSE_POS
+//#define OUTPUT_RESULT_PARAMS
+//#define OUTPUT_ALL_WINDOW
+
+//#define NORMAL_WHOLE_CLOUD
+//#define NOSE_REST_CLOUD
+//#define DRAW_NOSE_TIP_ON_2D
+//#define DRAW_XYZ_AXIS
+//#define DRAW_NOSE_SMOOTH_TERM
+//#define PRINT_OPTIMIZATION_TIME
+#define DRAW_SAMPLE_ON_2D
+#define DRAW_NSW_ON_2D	// NSW: Nose Searching Window
+
+
+
+#define MSG_SHOW_COUNT 45
 /*-------------------------------*/
-/*       OpenGL Parameters       */
+/*   Model Loader Parameters     */
 /*-------------------------------*/
-#define GL_WIN_SIZE_X 640
-#define GL_WIN_SIZE_Y 480
-#define GL_WIN_PIVOT_X	20
-#define GL_WIN_PIVOT_Y	200
-#define GL_PRINT_FPS_INTERVAL 30
-/* projection parameters setting */
-#define _FOVY	30.0
-#define _ASPECT	1.0
-#define _ZNEAR	0.01
-#define _ZFAR	10000.0
-/* camera parameters setting */
-#define _EYEX		0.0
-#define _EYEY		0.0
-#define _EYEZ		0.0
-#define _CENTERX	0.0
-#define _CENTERY	0.0
-#define _CENTERZ	1.0
-#define _UPX		0.0
-#define _UPY		1.0
-#define _UPZ		0.0
-/* glClearColor() Background Color */
-#define _CC_R	0.2f
-#define _CC_G	0.2f
-#define _CC_B	0.2f
-#define _CC_A	0.2f
-//#define _CC_R	1.f
-//#define _CC_G	1.f
-//#define _CC_B	1.f
-//#define _CC_A	1.f
+//#define MODEL_FILENAME "models\\full_auto_2_16_27_44_57_72_avg1.2.txt"
+//#define MODEL_FILENAME "models\\data3_1_36_106_121.txt"
+#define MODEL_FILENAME "models\\1.txt"
+
+//#define MODEL_FILENAME "models\\biwi_02.txt"
+#define DB_SET	2
+
+//#define DRAW_MODEL_NOSE
+#define AVG_NOSE
+//#define KNN_AVG_NOSE
+//#define SHALLOWEST_NOSE
+
+/*-----------------------*/
+/*   Iterative Matcher   */
+/*-----------------------*/
+//#ifdef USE_BIWI
+#define CVG_THRE_CNT 2
+#define CVG_THRE_ROT 0.05f
+#define CVG_THRE_EPP 2.0f
+#define CVG_THRE_GoEPP 0.01f
+//#else
+#define ROTATE_STEP		2.0f
+#define TRANSLATE_STEP	2.0f
+
+/*-------------------------------*/
+/* Smooth Filter (History Table) */
+/*-------------------------------*/
+#define SMOOTH_MODE_PRINTF
 
 /*-------------------------------*/
 /*       Kinect Parameters       */
@@ -92,7 +112,7 @@ using namespace cv;		//cv must be put after std, (I don't know why. tantofish.)
 #ifdef RES_QVGA
 #define IMG_W	320
 #define IMG_H	240
-#define IMG_FPS	30		//ASUS Xtion Can Support up to 60 FPS
+#define IMG_FPS	60		//ASUS Xtion Can Support up to 60 FPS
 #define IMG_W_HALF 160
 #define IMG_H_HALF 120
 #endif
@@ -117,52 +137,82 @@ using namespace cv;		//cv must be put after std, (I don't know why. tantofish.)
 #endif
 
 /*-------------------------------*/
-/*   Model Loader Parameters     */
+/*       OpenGL Parameters       */
 /*-------------------------------*/
-//#define MODEL_FILENAME "models\\full_auto_2_16_27_44_57_72_avg1.2.txt"
-//#define MODEL_FILENAME "models\\data3_1_36_106_121.txt"
-//#define MODEL_FILENAME "models\\1.txt"
-#define MODEL_FILENAME "models\\biwi_01.txt"
-#define DB_SET	1
+#define GL_WIN_SIZE_X 640
+#define GL_WIN_SIZE_Y 480
+#define GL_WIN_PIVOT_X	0
+#define GL_WIN_PIVOT_Y	400
+#define GL_PRINT_FPS_INTERVAL 30
+/* projection parameters setting */
+#define _FOVY	45.0
+#define _ASPECT	1.0
+#define _ZNEAR	0.01
+#define _ZFAR	10000.0
+/* camera parameters setting */
+#define _EYEX		0.0
+#define _EYEY		0.0
+#define _EYEZ		0.0
+#define _CENTERX	0.0
+#define _CENTERY	0.0
+#define _CENTERZ	1.0
+#define _UPX		0.0
+#define _UPY		1.0
+#define _UPZ		0.0
+/* glClearColor() Background Color */
+#define _CC_R	0.f
+#define _CC_G	0.f
+#define _CC_B	0.f
+#define _CC_A	0.f
 
-#define DRAW_MODEL_NOSE
-#define AVG_NOSE
-//#define KNN_AVG_NOSE
-//#define SHALLOWEST_NOSE
-//#define DRAW_NOSE_SMOOTH_TERM
 
-/*-------------------------------*/
-/*   Cloud Matcher Parameters    */
-/*-------------------------------*/
-#define ROTATE_STEP		2.0f
-#define TRANSLATE_STEP	2.0f
 
 /*-------------------------------*/
 /*   Sampler Parameters		     */
 /*-------------------------------*/
-#define NOSE_WINDOW_X		20
-#define NOSE_WINDOW_Y		10
-#define START_DELAY			15
-#define SAMPLE_NUMBER		40
-#define	SAMPLE_AREA_WIDTH	40
-#define	SAMPLE_AREA_HEIGHT	40
+#ifdef RES_QVGA
+	#define NOSE_WINDOW_X		10
+	#define NOSE_WINDOW_Y		5
+	#define	SAMPLE_AREA_WIDTH	20
+	#define	SAMPLE_AREA_HEIGHT	20
+	#define RES_FACTOR			2.f
+#endif
+#ifdef RES_VGA
+	#define NOSE_WINDOW_X		20
+	#define NOSE_WINDOW_Y		10
+	#define	SAMPLE_AREA_WIDTH	40
+	#define	SAMPLE_AREA_HEIGHT	40
+	#define RES_FACTOR			1.f
+#endif
+	#define START_DELAY			15
+	#define SAMPLE_NUMBER		30
+
+	#define SEGMENT_THRESH		50
+
+/*-------------------*/
+/*   Smooth Filter   */
+/*-------------------*/
+#define DYNAMIC_FRAME_WEIGHTINH
+#define SMOOTH_FRAME_NUM	5
+#define PRINT_FRAME_INTERVAL	30
 
 /*-------------------------------*/
 /*  Self Defined Data Structure  */
 /*-------------------------------*/
-//class TYPose{
-//public:
-//	float yaw, pitch, roll;
-//	float x, y, z;
-//	
-//	TYPose():yaw(0.f), pitch(0.f), roll(0.f), x(0.f), y(0.f), z(0.f){}
-//	
-//	void set(TYPose pose){	
-//		yaw = pose.yaw;		pitch = pose.pitch;		roll = pose.roll;
-//		x = pose.x;			y = pose.y;				z = pose.z;
-//	}
-//};
 
+/* Used for CV */
+class TYMouse{
+public:
+	bool Lpressed;
+	bool Rpressed;
+	int xSt, ySt;	// x_started, y_started
+	int x, y;
+	TYMouse():x(0),y(0){ Lpressed = false; Rpressed = false;}
+	void setCurrent(int u, int v){	x = u;	y = v;	}
+	void setStarted(int u, int v){	xSt = u;	ySt = v;	}
+	void reset(){x = 0; y = 0; xSt = 0; ySt = 0;}
+	
+};
 
 
 #endif

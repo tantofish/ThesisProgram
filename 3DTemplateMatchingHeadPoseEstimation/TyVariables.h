@@ -28,10 +28,19 @@ public:
 	TYGLVariables() : 
 	uiPitch(0.f), uiYaw(0.f), uiRoll(0.f), 
 	uiTransX(0.f), uiTransY(0.f), uiTransZ(0.f),
-	uiScale(1.f), rotateStep(5.f), translateStep(10.f), scaleStep(0.9f)
+	uiScale(1.f), rotateStep(5.f), translateStep(10.f), scaleStep(0.9f), 
+	msgPrintCount(0)
 	{}
 
 	void reset();
+
+	/* Message on the GL window Related Functions*/
+	bool isShowingMsg();
+	void setMessage(String &msg);
+	const char* getMessage();
+private:
+	int	msgPrintCount;
+	String message;
 };
 
 class TYSysVariables{
@@ -44,6 +53,8 @@ public:
 	bool doMatch;
 	bool isPause;
 	char poseText[100];
+
+	int sampleNum;
 
 	/* reset all variables (except doMatch)*/
 	void reset();

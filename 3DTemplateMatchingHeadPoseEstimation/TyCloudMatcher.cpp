@@ -22,6 +22,11 @@ TYCloudMatcher::TYCloudMatcher(){
 	cvgCtr = 0;
 	isConverged = true;
 
+	cvgThreshC = CVG_THRE_CNT;
+	cvgThreshR = CVG_THRE_ROT;
+	cvgThreshEPP = CVG_THRE_EPP;
+	cvgThreshGoEPP = CVG_THRE_GoEPP;
+
 	query = flann::Matrix<float>(qData, 1, 3);
 
 };
@@ -64,7 +69,7 @@ void TYCloudMatcher::buildTree(vector<Point3f> &inCloud, Point3f &inCenter, Poin
 }
 
 void TYCloudMatcher::match(cv::Vec6f &pose, Vec3f &vecOM, const std::vector<cv::Point3f> &pCloud, const cv::Point3f &nose){
-	if(!isConverged)	return;
+	//if(!isConverged)	return;
 	
 	
 	vecOM[0] = dstNose.x - nose.x;
@@ -76,16 +81,33 @@ void TYCloudMatcher::match(cv::Vec6f &pose, Vec3f &vecOM, const std::vector<cv::
 	argCurrent[3] += vecOM[0];
 	argCurrent[4] += vecOM[1];
 	argCurrent[5] += vecOM[2];
+
 	//printf("Steepest Gradient Idx = %d\n", bestMatchIdx);
 	isConverged = false;
+	isFirstIter = true;
+	isPreIdxValid = false;
 
-
+#ifdef PRINT_OPTIMIZATION_TIME
+	TYTimer timer;
+	timer.timeInit();
+#endif
 	while(!isConverged){
+
 		int index = this->bestDirection(pCloud, nose);
 		
+		
+		if(!isFirstIter && (index != 0) && (graOfPerPointEnergy <= cvgThreshGoEPP)){
+			/* Converge Condition is Meeted */
+			cvgCtr = 0;
+			rStep = ROTATE_STEP;
+			tStep = TRANSLATE_STEP;
+			isConverged = true;
+		}
+
 		if(index == 0){
-			//if( cvgCtr>=2 || rStep<=0.5f ){
-			if( cvgCtr>=4 || rStep<=0.02f ){
+			
+			if( cvgCtr >= cvgThreshC || rStep <= cvgThreshR || perPointEnergy <= cvgThreshEPP){
+				/* Converge Condition is Meeted */
 				//printf(" matching converged! \n");
 				cvgCtr = 0;
 				rStep = ROTATE_STEP;
@@ -99,11 +121,11 @@ void TYCloudMatcher::match(cv::Vec6f &pose, Vec3f &vecOM, const std::vector<cv::
 			cvgCtr = 0;
 		}
 
-		//this->transformPointCloud(argCurrent, pCloud, center, 
-
-		glutPostRedisplay();
+		isFirstIter = false;
 	}
-
+#ifdef PRINT_OPTIMIZATION_TIME
+	timer.timeReportMS();
+#endif
 	argCurrent[3] -= vecOM[0];
 	argCurrent[4] -= vecOM[1];
 	argCurrent[5] -= vecOM[2];
@@ -115,18 +137,14 @@ int TYCloudMatcher::bestDirection(const std::vector<cv::Point3f> &pCloud, const 
 	Vec6f argPeek;
 
 	float min = FLT_MAX;
-	int idx = -1;
 	float dist;
-
-	/* Try 13 Directions, For Each Direction: */
-	for(int i = 0 ; i < 13 ; i ++){
-		/* Set up the peaking argument for the current direction */
-		if(i > 6)		// i = [7,12] : is Translating direction 
-			for(int j = 0 ; j < 6 ; j++)	argPeek[j] = argCurrent[j] + gradient[i][j] * tStep;
-		else if(i > 0)	// i = [1, 6] : is Rotating direction 
-			for(int j = 0 ; j < 6 ; j++)	argPeek[j] = argCurrent[j] + gradient[i][j] * rStep;
-		else			// i = 0	  : is No Transforming direction 
-			for(int j = 0 ; j < 6 ; j++)	argPeek[j] = argCurrent[j];
+	
+	int idx = -1;
+	
+	if(!isFirstIter && isPreIdxValid ){
+		
+		for(int j = 0 ; j < 3 ; j++)	argPeek[j] = argCurrent[j] + gradient[preIterIdx][j] * rStep;
+		for(int j = 3 ; j < 6 ; j++)	argPeek[j] = argCurrent[j] + gradient[preIterIdx][j] * tStep;
 
 		/* Translate and rotate the source point cloud by the current argument */
 		transformPointCloud(argPeek, pCloud, center, this->bufCloud, this->bufCenter); 
@@ -134,10 +152,43 @@ int TYCloudMatcher::bestDirection(const std::vector<cv::Point3f> &pCloud, const 
 		/* Calculate Energy(Distance) */
 		dist = energy(this->bufCloud);
 
-		/* Keep the best one */
-		if( dist < min ){
+		/* Previous Gradient Doesn't Work Anymore */
+		if( dist >= preIterEnergy ){
+			isPreIdxValid = false;
+		}else{
+			preIterEnergy = dist;
+			idx = preIterIdx;
 			min = dist;
-			idx = i;
+		}
+	}
+	if(isFirstIter || !isPreIdxValid){
+		/* Try 13 Directions, For Each Direction: */
+		for(int i = 0 ; i < 13 ; i ++){
+			/* Set up the peaking argument for the current direction */
+			if(i > 6)		// i = [7,12] : is Translating direction 
+				for(int j = 0 ; j < 6 ; j++)	argPeek[j] = argCurrent[j] + gradient[i][j] * tStep;
+			else if(i > 0)	// i = [1, 6] : is Rotating direction 
+				for(int j = 0 ; j < 6 ; j++)	argPeek[j] = argCurrent[j] + gradient[i][j] * rStep;
+			else			// i = 0	  : is No Transforming direction 
+				for(int j = 0 ; j < 6 ; j++)	argPeek[j] = argCurrent[j];
+
+			/* Translate and rotate the source point cloud by the current argument */
+			transformPointCloud(argPeek, pCloud, center, this->bufCloud, this->bufCenter); 
+		
+			/* Calculate Energy(Distance) */
+			dist = energy(this->bufCloud);
+
+			/* Keep the best one */
+			if( dist < min ){
+				min = dist;
+				idx = i;
+			}
+		}
+		if(idx == 0)	isPreIdxValid = false;
+		else{
+			isPreIdxValid = true;
+			preIterEnergy = min;
+			preIterIdx = idx;
 		}
 	}
 	
@@ -146,8 +197,30 @@ int TYCloudMatcher::bestDirection(const std::vector<cv::Point3f> &pCloud, const 
 			argCurrent[i] = argCurrent[i] + gradient[idx][i]*step;
 
 
-	//printf("	Step:(%.1f, %.1f, %.1f, %.1f, %.1f, %.1f), (idx, min) = (%d, %.2f) \n",	
-	//	argCurrent[0], argCurrent[1], argCurrent[2], argCurrent[3], argCurrent[4], argCurrent[5], idx, min);	
+	if(isFirstIter){
+		perPointEnergy = min / (float)pCloud.size();
+	}else{
+		float curEPP = min / (float)pCloud.size();
+		graOfPerPointEnergy = perPointEnergy - curEPP;
+		perPointEnergy = curEPP;
+		if(graOfPerPointEnergy < 0)	{
+			printf("Exception : TYCloudMatcher::bestDirection  \"graOfPerPointEnergy < 0\" \n");
+		}
+	}
+	
+
+	if(perPointEnergy > 50)	printf("EPP: %.2f, Energy: %.2f\n", perPointEnergy, min);
+		/*if(min > 1000)	printf("EPP: %.2f, Energy: %.2f\n", perPointEnergy, min);
+		else			printf("EPP: %.2f\n", perPointEnergy);
+	else
+		if(min > 1000)	printf("Energy: %.2f\n", min);
+*/
+	
+	//printf("Step:(%.1f,%.1f,%.1f,%.1f,%.1f,%.1f), (idx, min) = (%d, %.2f, %.2f) \n",	
+		//argCurrent[0], argCurrent[1], argCurrent[2], argCurrent[3], argCurrent[4], argCurrent[5], idx, min, perPointEnergy);	
+
+	//preIterEnergy = min;
+	//preIterIdx = idx;
 
 	return idx;
 };
@@ -158,7 +231,7 @@ float TYCloudMatcher::energy(const std::vector<cv::Point3f> &pCloud){
 	float distSum = 0.f;
 	
 	//float distThresh = 10.f;
-	TYTimer timer;
+	//TYTimer timer;
 	//#pragma omp parallel for reduction(+:distSum)
 	//for(int queryIdx = 0 ; queryIdx < pCloud.size() ; queryIdx++){
 	//	
@@ -251,6 +324,7 @@ void TYCloudMatcher::transformPointCloud(const cv::Vec6f arguments,
 		_pCloudRes[i].y = tmpY + _center.y + ty;
 		_pCloudRes[i].z = tmpZ + _center.z + tz;
 	}
+	
 	// assign the center which is returned as a result
 	_centerRes.x = _center.x + tx;
 	_centerRes.y = _center.y + ty;

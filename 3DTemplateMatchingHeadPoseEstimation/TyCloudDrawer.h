@@ -16,6 +16,9 @@ public:
 	/*--------------------------*/
 	bool getHistogram(vector<Point3f> &cloud);
 	void drawPointCloud(vector<Point3f> &cloud);
+	void drawPointCloudRed(vector<Point3f> &cloud);
+	void drawPointCloudGreen(vector<Point3f> &cloud);
+	void drawPointCloudBlue(vector<Point3f> &cloud);
 private:
 	/*---------------------------*/
 	/* Private Member Attributes */

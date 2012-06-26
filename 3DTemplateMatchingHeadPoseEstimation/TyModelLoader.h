@@ -24,6 +24,8 @@ public:
 
 	cv::Point3f center;	// 3D position of all points' geometrical center
 	cv::Point3f nose;	// 3D position of the nose tip
+
+	void DM2PCwrite(cv::Mat &);	// Depth Map 2 Point Cloud Write
 };
 
 

@@ -33,16 +33,28 @@ public:
 
 	void reset();
 	void switchNoseSmooth();
+
+
+	vector<Point3f>	orCloud;	// orginal point cloud
+	vector<Point3f>	irCloud;	// inversely rotated point cloud
+	vector<Point2i>	pcIndex;	// pixel index for point Cloud
+
+	vector<Point3f> restCloud;	//(restOrClouf) :for picture generating use (useless in normal process)
+	vector<Point3f> restIrCloud;//(restIrClouf) :for picture generating use (useless in normal process)
+	vector<Point3f> wholeOrCloud;//(wholeOrCloud) :for picture generating use (useless in normal process)
+
+	vector<Point2i> noseSmoothSet2i;
+	vector<Point3f> noseSmoothSet3f;
+
+	int startDelay;
 private:
 	/* Private Member Attributes*/
 	int nwX;	// Nose Searching Window Width
 	int nwY;	// Nose Searching Window Height
 	
-	int startDelay;
+	
 
-	vector<Point3f>	orCloud;	// orginal point cloud
-	vector<Point3f>	irCloud;	// inversely rotated point cloud
-	vector<Point2i>	pcIndex;	// pixel index for point Cloud
+	
 
 	float a;	// horizontal axis radius of the sampling area ellipse (in pixel)
 	float b;	// vertical axis radius of the sampling area ellipse (in pixel)
@@ -51,11 +63,12 @@ private:
 	float areaAngle;
 
 	bool noseSmoothTerm;
-	vector<Point2i> noseSmoothSet2i;
-	vector<Point3f> noseSmoothSet3f;
+
+	
 
 	/* Private Member Functions */
 	void findNoseTip(const Mat &depthRAW, const Vec6f &pose);
+	inline void picGenUse(const Mat &depthRAW, const Vec6f &pose);
 };
 
 

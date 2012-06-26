@@ -3,16 +3,36 @@
 void TYGLVariables::reset(){
 	uiPitch = 0;	uiYaw = 0;		uiRoll = 0;
 	uiTransX = 0;	uiTransY = 0;	uiTransZ = 0;
-	uiScale = 1;
+	uiScale = 1; 
 }
 
+void TYGLVariables::setMessage(String &msg){
+	msgPrintCount = MSG_SHOW_COUNT;
+	message = msg;
+}
 
+const char* TYGLVariables::getMessage(){
+	return message.c_str();
+}
+
+bool TYGLVariables::isShowingMsg(){
+	if(msgPrintCount > 0){
+		msgPrintCount--;
+		return true;
+	}
+	else{
+		return false;
+	}
+}
+
+/*------------------------------------------------------------------------*/
 
 TYSysVariables::TYSysVariables(){
 	pose = Vec6f(0.f, 0.f, 0.f, 0.f, 0.f, 0.f);
 	vecOM = Vec3f(0.f, 0.f, 0.f);
 	isPause = false;
 	doMatch = false;
+	sampleNum = SAMPLE_NUMBER;
 }
 
 void TYSysVariables::reset(){

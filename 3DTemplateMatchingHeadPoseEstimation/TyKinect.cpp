@@ -25,6 +25,7 @@ TYKinect :: TYKinect(bool sync, bool mirr, char *filename){
 	showDepth	 = false;
 	showImage	 = false;
 	antiFlickerCap = false;
+	isFirstFrame = true;
 	iWindowName  = String(I_WIN_NAME);
 	dWindowName  = String(D_WIN_NAME);
 	isSyncTwoView = sync;
@@ -80,6 +81,7 @@ XnStatus TYKinect :: Init(bool depthNode, bool imageNode){	//Kinect Routines (Co
 	if(!(hasDepthNode||hasImageNode)){
 		EnumerationErrors errors;
 		printf("Trying to create node from oni file\n");
+		//status = xnContextOpenFileRecording( (XnContext*) &context,  oniFile.c_str());
 		status = context.OpenFileRecording(oniFile.c_str());
  		CHECK_RC(status,"Open input file");
 		
@@ -341,6 +343,8 @@ void TYKinect :: GetCvFormatImages(){
 			}
 		}
 	}
+
+	cv::rectangle(DepthRGB, Rect(cropL, cropT, cropR-cropL+1, cropB-cropT+1), CV_RGB(255,0,0));
 }
 void TYKinect :: SaveImages(){
 	sprintf(outputName,"output/%d_depth.png",outputIdx);
@@ -374,7 +378,6 @@ void TYKinect :: setCrop(int n, int f, int l, int r, int t, int b){
 	if(n != -1) cropN = n;
 	if(f != -1) cropF = f;
 }
-
 void TYKinect :: RegisterKey(int key){
 	
 	switch(opMode){
@@ -435,4 +438,7 @@ void TYKinect :: RegisterKey(int key){
 		break;
 	}
 	
+}
+void TYKinect :: switchMirroring(){
+	context.SetGlobalMirror(!context.GetGlobalMirror());
 }

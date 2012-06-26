@@ -11,8 +11,20 @@ private:
 	float rStep;		// Rotate Step
 	float tStep;		// Translate Step
 	int cvgCtr;			// Converge Counter
-	bool isConverged;	// Converge Flag
 	
+	
+	int cvgThreshC;		// Converge Threshold of Count
+	float cvgThreshR;	// Converge Threshold of Rotate Step
+	float cvgThreshEPP; // Converge Threshold of per Point Energy
+	float cvgThreshGoEPP;// Converge Threshold of " Gradient of per Point Energy "
+
+	float graOfPerPointEnergy;	//" Gradient of per Point Energy "
+	float perPointEnergy;	// Total Energy divided by Point Num
+	float preIterEnergy;	// previous iteration energy
+	int preIterIdx;			// gradient index
+	bool isPreIdxValid;		// is previous iteration gradient still work flag
+	bool isFirstIter;		// is first iteration flag
+
 
 	std::vector<cv::Point3f> bufCloud;
 	cv::Point3f bufCenter;
@@ -49,6 +61,7 @@ public:
 	void buildTree(vector<Point3f> &inCloud, Point3f &inCenter, Point3f &inNose);
 	void match(cv::Vec6f &pose, Vec3f &vecOM, const std::vector<cv::Point3f> &pCloud, const cv::Point3f &nose);
 	
+	bool isConverged;	// Converge Flag
 };
 
 

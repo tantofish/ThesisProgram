@@ -59,12 +59,84 @@ void TYCloudDrawer::drawPointCloud(vector<Point3f> &cloud){
 	unsigned int nPoints = cloud.size();
 	
 	glBegin(GL_POINTS);
-	for (int i = 0 ; i < nPoints ; i++){
+	for (unsigned int i = 0 ; i < nPoints ; i++){
 		int val = (int)cloud[i].z;
 		
 			float n = histogram[val] * 0.8;
 			
 			glColor3f(n, n, n);
+			glVertex3f(cloud[i].x, cloud[i].y, cloud[i].z);
+		
+	}
+	glEnd();
+	
+#ifdef DRAW_TIME
+	printf("draw ");
+	ttt.timeReportMS();
+#endif
+}
+
+void TYCloudDrawer::drawPointCloudRed(vector<Point3f> &cloud){
+#ifdef DRAW_TIME
+	ttt.timeInit();
+#endif
+	unsigned int nPoints = cloud.size();
+	
+	glBegin(GL_POINTS);
+	for (unsigned int i = 0 ; i < nPoints ; i++){
+		int val = (int)cloud[i].z;
+		
+			float n = histogram[val];
+			
+			glColor3f(n, n, 0.f);
+			glVertex3f(cloud[i].x, cloud[i].y, cloud[i].z);
+		
+	}
+	glEnd();
+	
+#ifdef DRAW_TIME
+	printf("draw ");
+	ttt.timeReportMS();
+#endif
+}
+
+void TYCloudDrawer::drawPointCloudBlue(vector<Point3f> &cloud){
+#ifdef DRAW_TIME
+	ttt.timeInit();
+#endif
+	unsigned int nPoints = cloud.size();
+	
+	glBegin(GL_POINTS);
+	for (unsigned int i = 0 ; i < nPoints ; i++){
+		int val = (int)cloud[i].z;
+		
+			float n = histogram[val] * 0.8f;
+			
+			glColor3f(0, 0, n+0.2f);
+			glVertex3f(cloud[i].x, cloud[i].y, cloud[i].z);
+		
+	}
+	glEnd();
+	
+#ifdef DRAW_TIME
+	printf("draw ");
+	ttt.timeReportMS();
+#endif
+}
+
+void TYCloudDrawer::drawPointCloudGreen(vector<Point3f> &cloud){
+#ifdef DRAW_TIME
+	ttt.timeInit();
+#endif
+	unsigned int nPoints = cloud.size();
+	
+	glBegin(GL_POINTS);
+	for (unsigned int i = 0 ; i < nPoints ; i++){
+		int val = (int)cloud[i].z;
+		
+			float n = histogram[val] * 0.8f;
+			
+			glColor3f(0.f, n + 0.2f, 0.f);
 			glVertex3f(cloud[i].x, cloud[i].y, cloud[i].z);
 		
 	}

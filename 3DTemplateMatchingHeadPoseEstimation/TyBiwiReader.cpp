@@ -292,7 +292,7 @@ bool TYBiwiDB::getNextFrame(){
 #ifdef BIWI_READ_COLOR
 	// read color image
 	sprintf(fileName, "%s\\%s\\frame_%s_rgb.png", rootPath, sIndex, fIndex);
-	colorImg = cv::imread(fileName);
+	ColorRGB = cv::imread(fileName);
 #endif
 
 	// set next iteration set index and frame index
