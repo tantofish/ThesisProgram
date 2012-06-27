@@ -52,9 +52,6 @@ private:
 	int nwX;	// Nose Searching Window Width
 	int nwY;	// Nose Searching Window Height
 	
-	
-
-	
 
 	float a;	// horizontal axis radius of the sampling area ellipse (in pixel)
 	float b;	// vertical axis radius of the sampling area ellipse (in pixel)

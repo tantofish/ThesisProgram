@@ -118,3 +118,7 @@ void TYHeadModel::drawNose(float r, float g, float b, float size){
 #endif
 #endif
 }
+
+void TYHeadModel::DM2PCwrite(cv::Mat &DepthRAW, cv::Mat &ColorRGB){
+
+}

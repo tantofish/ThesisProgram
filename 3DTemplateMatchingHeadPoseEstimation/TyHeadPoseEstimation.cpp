@@ -243,8 +243,6 @@ void myDisplay(){
 	if(matcher.isConverged){
 	////////////////////////////////////////
 	
-
-
 	if(!sysVars.isPause){
 #ifdef USE_BIWI
 		/* Database Input: use biwi database */
@@ -288,12 +286,9 @@ void myDisplay(){
 	glPushMatrix();
 
 	
-	drawVirtualCharacter();
 	drawHeadModelCloud();
 	drawSampleCloud();
 	drawSamplePixels();
-	
-
 	writeOutAllWindows();
 	
 	//glPushMatrix();
@@ -318,12 +313,14 @@ void myDisplay(){
 	//	observeDrawer.drawPointCloud(sampler.wholeOrCloud);
 	//glPopMatrix();
 	
+	glDisable(GL_LIGHTING);
 	/* Put FPS String Onto The GL Window */
 	myGlPutText(-0.95f, -0.95f, myTimerGL.FPSstring(), GLUT_BITMAP_HELVETICA_18, 1.0f, 0.0f, 0.0f, 1.0f);
 	myGlPutText(-0.95f, 0.9f, sysVars.poseString(), GLUT_BITMAP_HELVETICA_18, 1.0f, 1.0f, 0.0f, 1.0f);
 	if(glVars.isShowingMsg())
 		myGlPutText(-0.8f, -0.8f, glVars.getMessage(), GLUT_BITMAP_HELVETICA_18, 0.8f, 0.8f, 0.8f, 1.0f);
 
+	drawVirtualCharacter();
 
 #ifdef USE_BIWI
 	/* accuracy computing */
@@ -404,7 +401,7 @@ void lightInit()
 	glEnable(GL_LIGHTING);
 
 	for(int j=0;j<3;j++){
-		ambient[j]=0.8;
+		ambient[j]=0.1;
 		diffuse[j]=0.8;
 		specular[j]=0.3;
 	}
@@ -412,14 +409,19 @@ void lightInit()
 
 	r=1000;
 	cAtt=1;
-	lAtt=0.0000000001;
-	qAtt=0.0000000000001;
+	lAtt=0.00001;
+	qAtt=0.000000001;
 	alpha = 0;
 	beta = 0;
 
 	LightPos[0]=r*cos(toRad(alpha))*cos(toRad(beta));
 	LightPos[1]=r*cos(toRad(alpha))*sin(toRad(beta));
 	LightPos[2]=r*sin(toRad(alpha));
+	LightPos[3]=1;
+
+	LightPos[0]=200;
+	LightPos[1]=200;
+	LightPos[2]=0;
 	LightPos[3]=1;
 
 	glLightfv(GL_LIGHT0,GL_AMBIENT,ambient);
@@ -433,6 +435,12 @@ void lightInit()
 
 	glEnable(GL_LIGHT0);
 	LightPos[0] *= -1;
+	LightPos[1] *= -1;
+	for(int j=0;j<3;j++){
+		ambient[j]=0.3;
+		diffuse[j]=0.3;
+		specular[j]=0.3;
+	}
 	glLightfv(GL_LIGHT1,GL_AMBIENT,ambient);
 	glLightfv(GL_LIGHT1,GL_DIFFUSE,diffuse);
 	glLightfv(GL_LIGHT1,GL_SPECULAR,specular);
@@ -446,11 +454,19 @@ void lightInit()
 };
 
 void myInitial(){
+	glewInit();
+	if(glewIsSupported("GL_VERSION_2_0")){
+		cout << "Ready for OpenGL 2.0\n";
+	}else{
+		cout << "GLSL not supported\n";
+		exit(1);
+	}
+
 	dmModel.loadSkull();
-	//dmModel.loadAlfred();
+	dmModel.loadLee();
 	dmModel.loadCSIE();
 	dmModel.loadHead();
-	glewInit();
+	
 	
 
 	/* Lighting Initial */

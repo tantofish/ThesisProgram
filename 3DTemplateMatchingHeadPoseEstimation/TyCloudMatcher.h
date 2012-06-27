@@ -37,15 +37,18 @@ private:
 	cv::Point3f srcCenter;
 	cv::Point3f srcNose;
 
-	//cv::flann::Index kdtree;
+	/* For Head Motion Tracking */
 	flann::Matrix<float> dataset;
 	flann::Index<flann::L2<float> > *kdtree;
 	float qData[3];
 	flann::Matrix<float> query; 
-	/*
-	cv::Mat srcCloudMat;
-	cv::flann::Index_<cv::flann::L2<float> > kdtree;
-	*/
+
+	/* For Facial Expression Recognition */
+	vector<flann::Matrix<float>> feDataset;				// facial expression dataset
+	vector<flann::Index<flann::L2<float> >*> feKDtree;	// facial expression kdtree
+//	float qData[3];
+	//flann::Matrix<float> query; 
+
 
 	void transformPointCloud(const cv::Vec6f arguments,
 							 const std::vector<cv::Point3f> &_pCloud,

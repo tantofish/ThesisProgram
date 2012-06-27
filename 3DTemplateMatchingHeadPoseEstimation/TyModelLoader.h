@@ -12,6 +12,7 @@ private:
 	//cv::Point3f knnAvgNose;
 	cv::Point3f averageNose;
 public:
+	TYHeadModel():outIndex(0){}
 	void findNose();
 	void drawColorCloud();
 	void drawNose(float r = 1.f, float g = 0.0f, float b = 0.f, float size = 3.f);
@@ -25,7 +26,9 @@ public:
 	cv::Point3f center;	// 3D position of all points' geometrical center
 	cv::Point3f nose;	// 3D position of the nose tip
 
-	void DM2PCwrite(cv::Mat &);	// Depth Map 2 Point Cloud Write
+	int outIndex;
+	char outName[50];
+	void DM2PCwrite(cv::Mat &DepthRAW, cv::Mat &ColorRGB);	// Depth Map 2 Point Cloud Write
 };
 
 

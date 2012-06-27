@@ -82,6 +82,9 @@
     <ClCompile Include="GLTexture.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Model_3DS.cpp" />
+    <ClCompile Include="ObjectDisplay.cpp" />
+    <ClCompile Include="ObjRead.cpp" />
+    <ClCompile Include="textfile.cpp" />
     <ClCompile Include="TRIModel.cpp" />
     <ClCompile Include="TyBiwiReader.cpp" />
     <ClCompile Include="TyCloudDrawer.cpp" />
@@ -101,6 +104,9 @@
     <ClInclude Include="GLTexture.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="Model_3DS.h" />
+    <ClInclude Include="ObjectDisplay.h" />
+    <ClInclude Include="ObjRead.h" />
+    <ClInclude Include="textfile.h" />
     <ClInclude Include="TRIModel.h" />
     <ClInclude Include="TyBiwiReader.h" />
     <ClInclude Include="TyCloudDrawer.h" />
