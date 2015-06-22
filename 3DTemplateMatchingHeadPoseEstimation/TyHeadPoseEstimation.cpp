@@ -14,10 +14,13 @@ TYGLVariables glVars;
 TYSysVariables sysVars;
 
 TYTimer myTimerGL;
-//TYKinect kinect(true, true, "female.oni");
-TYKinect kinect(true, true, "alice.oni");
+//TYKinectMotorPlus kinect(true, true, "female.oni");
+TYKinect kinect(true, true, "female.oni");
+
+//TYKinect kinect(true, true, "alice.oni");
 TYBiwiDB biwi("C:\\Users\\Tantofish\\Master\\kinect_head_pose_db");
 TYHeadModel myHead;
+TYHeadModel myFacial;
 TYSampler sampler;
 TYCloudMatcher matcher;
 
@@ -108,6 +111,7 @@ inline void drawXYZAxis(){
 #endif
 }
 inline void drawVirtualCharacter(){
+#ifdef DRAW_VIRTUAL_MODEL
 	/*------------------------*/
 	/* draw virtual character */
 	/*------------------------*/
@@ -140,6 +144,7 @@ inline void drawVirtualCharacter(){
 		drawXYZAxis();
 		dmModel.draw();
 	glPopMatrix();
+#endif
 }
 inline void drawSampleCloud(){
 	/* Draw Sample Point Cloud */
@@ -205,7 +210,12 @@ inline void drawHeadModelCloud(){
 		modelDrawer.getHistogram(biwi.point);
 		modelDrawer.drawPointCloud(biwi.point);
 #else
-		modelDrawer.drawPointCloud(myHead.pointCloud);	// Head Point Cloud
+		
+		if( sysVars.mpcShowIdx == 0 )
+			modelDrawer.drawPointCloud(myHead.pointCloud);	// Head Point Cloud
+		else
+			modelDrawer.drawPointCloud(*(myHead.fePointCloud[sysVars.mpcShowIdx-1]));
+			
 #endif
 	glPopMatrix();
 }
@@ -222,7 +232,7 @@ inline void drawSamplePixels(){
 	}
 #else
 	sampler.drawSamples2i(kinect.DepthRGB);
-	kinect.Show(true, false);
+	kinect.Show(true, true);
 	int key = waitKey(1);
 	kinect.RegisterKey(key);
 
@@ -237,7 +247,11 @@ void myDisplay(){
 	
 	myTimerGL.timeInit();		// time calculation head
 	
+#ifdef USE_BIWI
+	cv::setMouseCallback("Biwi DB Depth", myMouseCallBack);
+#else
 	cv::setMouseCallback(D_WIN_NAME, myMouseCallBack);
+#endif
 
 	////////////////////////////////////////
 	if(matcher.isConverged){
@@ -271,7 +285,14 @@ void myDisplay(){
 	#endif
 
 		/*  */
-		if(sysVars.doMatch)	matcher.match(sysVars.pose, sysVars.vecOM, sampler.sample3f, sampler.nose3f);
+		if(sysVars.doMatch)	{
+			matcher.match(sysVars.pose, sysVars.vecOM, sampler.sample3f, sampler.nose3f);
+			if(sysVars.doFacialExpression){
+				int bestFE = matcher.bestMatchedFE(sysVars.pose, sysVars.vecOM, sampler.feSample3f, sampler.nose3f);
+				sysVars.mpcShowIdx = bestFE;
+				printf("Best Facial Expression Index = %d \n", bestFE);
+			}
+		}
 	
 		/* History Table : Using Smooth Filter */
 		sysVars.pose = sfilter.smoothing(sysVars.pose);
@@ -491,7 +512,7 @@ void myInitial(){
 #ifdef RES_QVGA
 	kinect.setCrop(0, 2500, 40, 280, 40, 200);
 #else
-	kinect.setCrop(0, 2500, 80, 560, 80, 400);
+	kinect.setCrop(0, 1600, 10, 630, 10, 470);
 #endif
 #endif
 	myHead.mReadModel(MODEL_FILENAME);
@@ -499,6 +520,8 @@ void myInitial(){
 	modelDrawer.getHistogram(myHead.pointCloud);
 
 	matcher.buildTree(myHead.pointCloud, myHead.center, myHead.nose);
+
+	sampler.getSysVars(&sysVars);
 }
 
 void myReshape(GLint w, GLint h){
@@ -608,8 +631,31 @@ void myKey(GLubyte key, GLint x, GLint y){
 		msg = sfilter.nextFilter();
 		glVars.setMessage(msg);
 		break;
-	case '=':	
-		sysVars.turnOnOffMatch();	
+	case '-':	// snapshot and update(change) online head model to system
+		myHead.mGetModelOnline(kinect.DepthRAW, kinect.DepthRGB);
+		modelDrawer.getHistogram(myHead.pointCloud);
+		matcher.buildTree(myHead.pointCloud, myHead.center, myHead.nose);
+		glVars.setMessage(String("Model Point Cloud Updated"));
+		break;
+	case '=':
+		//*myHead.fePointCloud.end();
+		myHead.mGetFacialExpressionOnline(kinect.DepthRAW, kinect.DepthRGB);
+		sysVars.mpcShowIdx++;
+		sysVars.mpcNum++;
+		//modelDrawer.getHistogram(*(myHead.fePointCloud[myHead.fePointCloud.size()-1]));
+		matcher.buildFETree(*(myHead.fePointCloud[myHead.fePointCloud.size()-1]),
+							myHead.feCenter[myHead.fePointCloud.size()-1],
+							myHead.feNose[myHead.fePointCloud.size()-1]);
+		char mmsg[100];
+		sprintf(mmsg, "New Facial Expression Model Point Cloud Registered.(%d)",sysVars.mpcNum);
+		glVars.setMessage(String(mmsg));
+		break;
+	case '1':	sysVars.doFacialExpression = !sysVars.doFacialExpression;
+		break;
+	case '`':	sysVars.nextMPC();
+		break;
+	case 'z':	
+		sysVars.turnOnOffMatch();
 		break;
 	case 'r':	
 		sampler.reset();	
@@ -644,7 +690,8 @@ void myKey(GLubyte key, GLint x, GLint y){
 		break;
 	/* ESC: End this program */
 	case 27:	exit(0);	break;
-
+	case ';':	kinect.motorUp();	break;
+	case '\'':	kinect.motorDown();	break;
 #ifdef EDIT_BIWI
 	case 'a':	
 		biwi.bOffset += 10;	

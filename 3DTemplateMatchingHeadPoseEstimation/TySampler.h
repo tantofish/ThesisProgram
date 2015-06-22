@@ -3,6 +3,7 @@
 #define _CRT_SECURE_NO_WARNINGS
 
 #include "main.h"
+#include "TyVariables.h"
 
 #include <cmath>
 #include <ctime>
@@ -17,7 +18,8 @@ public:
 	vector<Point3f> sample3f;
 	vector<Point2i> sample2i;
 
-
+	vector<Point3f> feSample3f;
+	vector<Point2i> feSample2i;
 	/* Public Member Functions */
 
 	/* Constructor */
@@ -30,8 +32,11 @@ public:
 	void drawSamples3f();
 	/* Set the sampling area size (width and height in millimeter) */
 	void setSampleArea(float width, float height);
-
+	/* Register the System Varaibles Object */
+	void getSysVars(TYSysVariables *sysV);
+	/**/
 	void reset();
+	/**/
 	void switchNoseSmooth();
 
 
@@ -59,9 +64,13 @@ private:
 	float areaH;	// vertical axis radius of the sampling area ellipse (in millimeter)
 	float areaAngle;
 
+	float feA;
+	float feB;
+	int feSampleNum;
+
 	bool noseSmoothTerm;
 
-	
+	TYSysVariables *sysVars;
 
 	/* Private Member Functions */
 	void findNoseTip(const Mat &depthRAW, const Vec6f &pose);

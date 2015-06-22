@@ -24,6 +24,7 @@ bool TYDemoModel::loadHead(){
 }
 
 bool TYDemoModel::loadLee(){
+	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	LeeHead.init(	"model_show/lee/combine_all.obj", 
 					"model_show/lee/try_combine.png", 
 					"model_show/lee/DrLee_Head_00_op_normal.png",
@@ -32,6 +33,7 @@ bool TYDemoModel::loadLee(){
 					"model_show/lee/DrLee_Head_00_op_normal_difg.png",
 					"model_show/lee/DrLee_Head_00_op_normal_difb.png");
 	LeeHead.initShader("model_show/lee/head.vs", "model_show/lee/head.fs");
+	glPopAttrib();
 	return true;
 }
 

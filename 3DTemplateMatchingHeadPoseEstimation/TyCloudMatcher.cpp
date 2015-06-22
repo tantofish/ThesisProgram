@@ -57,21 +57,61 @@ void TYCloudMatcher::buildTree(vector<Point3f> &inCloud, Point3f &inCenter, Poin
 		data[i*3+1] = inCloud[i].y;
 		data[i*3+2] = inCloud[i].z;
 	}
-	dataset = flann::Matrix<float>(data,nPoints,3);
+	
+	if(dataset.size() == (unsigned int)0)	/* When the model is loaded in at the beginning of the system */
+		dataset.push_back( flann::Matrix<float>(data,nPoints,3) );
+	else									/* When the model is made and updated during the online process */
+		dataset[0] = flann::Matrix<float>(data,nPoints,3);
 	timer.timeReportMS();
 
 	cout << "Building Destination KD Tree... " ;
 	timer.timeInit();
-	kdtree = new flann::Index<flann::L2<float> >(dataset, flann::KDTreeSingleIndexParams());
-	kdtree->buildIndex();
+	if(kdtree.size() == (unsigned int)0)	/* When the model is loaded in at the beginning of the system */
+		kdtree.push_back( new flann::Index<flann::L2<float> >(dataset[0], flann::KDTreeSingleIndexParams()) );
+	else{									/* When the model is made and updated during the online process */
+		delete kdtree[0];
+		kdtree[0] = new flann::Index<flann::L2<float> >(dataset[0], flann::KDTreeSingleIndexParams());
+	}
+	kdtree[0]->buildIndex();
+
+	delete [] data;
 	timer.timeReportMS();
 
 }
 
+void TYCloudMatcher::buildFETree(vector<Point3f> &inCloud, Point3f &inCenter, Point3f &inNose){
+	TYTimer timer;
+
+	timer.timeInit();
+	feDstCenter.push_back(inCenter);
+	feDstNose.push_back(inNose);
+	cout << "Uploading Point Cloud Data... " ;
+		
+	int nPoints = (int)inCloud.size();
+	float *data = new float [nPoints*3];
+	for(int i = 0 ; i < nPoints ; i++){
+		data[i*3+0] = inCloud[i].x;
+		data[i*3+1] = inCloud[i].y;
+		data[i*3+2] = inCloud[i].z;
+	}
+	
+	dataset.push_back( flann::Matrix<float>(data,nPoints,3) );
+	
+	timer.timeReportMS();
+
+	cout << "Building Destination KD Tree... " ;
+	timer.timeInit();
+	
+	kdtree.push_back( new flann::Index<flann::L2<float> >(dataset[dataset.size()-1], flann::KDTreeSingleIndexParams()) );
+	kdtree[kdtree.size()-1]->buildIndex();
+
+	//delete [] data;
+
+	timer.timeReportMS();
+}
+
 void TYCloudMatcher::match(cv::Vec6f &pose, Vec3f &vecOM, const std::vector<cv::Point3f> &pCloud, const cv::Point3f &nose){
 	//if(!isConverged)	return;
-	
-	
 	vecOM[0] = dstNose.x - nose.x;
 	vecOM[1] = dstNose.y - nose.y;
 	vecOM[2] = dstNose.z - nose.z;
@@ -126,6 +166,7 @@ void TYCloudMatcher::match(cv::Vec6f &pose, Vec3f &vecOM, const std::vector<cv::
 #ifdef PRINT_OPTIMIZATION_TIME
 	timer.timeReportMS();
 #endif
+
 	argCurrent[3] -= vecOM[0];
 	argCurrent[4] -= vecOM[1];
 	argCurrent[5] -= vecOM[2];
@@ -225,10 +266,49 @@ int TYCloudMatcher::bestDirection(const std::vector<cv::Point3f> &pCloud, const 
 	return idx;
 };
 
-float TYCloudMatcher::energy(const std::vector<cv::Point3f> &pCloud){
+int TYCloudMatcher::bestMatchedFE(cv::Vec6f &pose, Vec3f &vecOM, const std::vector<cv::Point3f> &pCloud, const cv::Point3f &nose){
+	
+	float min = FLT_MAX;
+	float dist;
+	int idx = -1;
+	
+	argCurrent = pose;
+	argCurrent[3] += vecOM[0];
+	argCurrent[4] += vecOM[1];
+	argCurrent[5] += vecOM[2];
+
+
+	/* Translate and rotate the source point cloud by the current argument */
+	transformPointCloud(argCurrent, pCloud, nose, this->bufCloud, this->bufCenter); 
+
+	printf("kdtree size = %d, (",kdtree.size());
+	for(unsigned int i = 0 ; i < kdtree.size() ; i++){
+		
+		
+		
+		/* Calculate Energy(Distance) */
+		dist = energy(this->bufCloud, i);
+
+		printf("%.2f, ",dist);
+		/* Keep the best one */
+		if( dist < min ){
+			min = dist;
+			idx = i;
+		}
+	}
+	printf(") ");
+	
+	argCurrent[3] -= vecOM[0];
+	argCurrent[4] -= vecOM[1];
+	argCurrent[5] -= vecOM[2];
+
+	return idx;
+};
+
+float TYCloudMatcher::energy(const std::vector<cv::Point3f> &pCloud, int i){
 	
 	
-	float distSum = 0.f;
+	
 	
 	//float distThresh = 10.f;
 	//TYTimer timer;
@@ -252,6 +332,7 @@ float TYCloudMatcher::energy(const std::vector<cv::Point3f> &pCloud){
 	//	
 	//}
 
+	float distSum = 0.f;
 	int knn = 1;	
 	flann::Matrix<int> indices(new int[query.rows*knn], query.rows, knn);
 	flann::Matrix<float> dists(new float[query.rows*knn], query.rows, knn);
@@ -263,7 +344,7 @@ float TYCloudMatcher::energy(const std::vector<cv::Point3f> &pCloud){
 		query[0][2] = pCloud[queryIdx].z;
 
 		//timer.timeInit();
-		kdtree->knnSearch(query, indices, dists, knn, flann::SearchParams(32));
+		kdtree[i]->knnSearch(query, indices, dists, knn, flann::SearchParams(32));
 		//timer.timeReportMS();
 
 		distSum = distSum + dists[0][0];

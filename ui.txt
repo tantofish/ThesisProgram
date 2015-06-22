@@ -1,0 +1,31 @@
+在 OpenGL Window 的 Keyboard Input:
+
+	[ : Sample Number + 5
+	] : Sample Number - 5
+	f : 換 Smooth Filter
+	- : 照一張並建立一新的 Model Point Cloud
+	= : 照一張並增加一新的 Facial Expression Model Point Cloud
+	` : 當'='按過很多伺候，用來換顯示的 Model Point Cloud
+	1 : 做 Facial Expression Recognition 與不做之切換
+	z : Start/Stop Tracking
+	r : Reset
+	n : Turn On/Off Nose Smooth(Average) Term
+	/ : BiWi Database -> Next Set
+	t : testing...
+	m : 更換 Virtual Charactor (目前有Head, Skull, LsLee, CSIE)
+	, : 鏡像顯示 
+	; : Kinect Motor Up   (目前壞掉)
+	\ : Kinect Motor Down (目前壞掉)
+
+	space: Pause/Continue
+	esc:   Exit
+
+在 OpenGL Window 的 Mouse Input:
+	左鍵拖曳: 旋轉 (yaw, pitch)
+	右鍵拖曳: 平移
+	中鍵上下拖曳: 放大縮小
+	中鍵左右拖曳: 旋轉 (roll)
+
+在OpenCV Depth Map Window 的 Keyboard Input:
+
+在OpenCV Depth Map Window 的 Mouse Input:

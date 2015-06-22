@@ -38,16 +38,14 @@ private:
 	cv::Point3f srcNose;
 
 	/* For Head Motion Tracking */
-	flann::Matrix<float> dataset;
-	flann::Index<flann::L2<float> > *kdtree;
+	vector<flann::Matrix<float>> dataset;
+	vector<flann::Index<flann::L2<float> > *>kdtree;
+	vector<cv::Point3f> feDstCenter;
+	vector<cv::Point3f> feDstNose;
+
 	float qData[3];
 	flann::Matrix<float> query; 
 
-	/* For Facial Expression Recognition */
-	vector<flann::Matrix<float>> feDataset;				// facial expression dataset
-	vector<flann::Index<flann::L2<float> >*> feKDtree;	// facial expression kdtree
-//	float qData[3];
-	//flann::Matrix<float> query; 
 
 
 	void transformPointCloud(const cv::Vec6f arguments,
@@ -57,13 +55,20 @@ private:
 							 cv::Point3f &_centerRes);
 	
 	int bestDirection(const std::vector<cv::Point3f> &pCloud, const cv::Point3f &center);
-	float energy(const std::vector<cv::Point3f> &pCloud);
+	
+
+	/* Match pCloud(sample point cloud) to kdtree[i](ith model point cloud) */
+	float energy(const std::vector<cv::Point3f> &pCloud, int i = 0);
 
 public:
 	TYCloudMatcher();
 	void buildTree(vector<Point3f> &inCloud, Point3f &inCenter, Point3f &inNose);
+	void buildFETree(vector<Point3f> &inCloud, Point3f &inCenter, Point3f &inNose);
+
+
 	void match(cv::Vec6f &pose, Vec3f &vecOM, const std::vector<cv::Point3f> &pCloud, const cv::Point3f &nose);
-	
+	int bestMatchedFE(cv::Vec6f &pose, Vec3f &vecOM, const std::vector<cv::Point3f> &pCloud, const cv::Point3f &nose);
+
 	bool isConverged;	// Converge Flag
 };
 

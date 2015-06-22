@@ -49,6 +49,8 @@ using namespace cv;		//cv must be put after std, (I don't know why. tantofish.)
 //---------
 // control
 //---------
+
+
 //#define USE_BIWI
 //#define BIWI_READ_COLOR
 //#define EDIT_BIWI
@@ -63,12 +65,19 @@ using namespace cv;		//cv must be put after std, (I don't know why. tantofish.)
 //#define DRAW_XYZ_AXIS
 //#define DRAW_NOSE_SMOOTH_TERM
 //#define PRINT_OPTIMIZATION_TIME
+
+#define DRAW_VIRTUAL_MODEL
 #define DRAW_SAMPLE_ON_2D
 #define DRAW_NSW_ON_2D	// NSW: Nose Searching Window
 
-
-
 #define MSG_SHOW_COUNT 45
+
+/*---------------------------------*/
+/* Facieal Exppression Recognition */
+/*---------------------------------*/
+//#define FACIAL_EXPRESSION
+
+
 /*-------------------------------*/
 /*   Model Loader Parameters     */
 /*-------------------------------*/
@@ -76,8 +85,8 @@ using namespace cv;		//cv must be put after std, (I don't know why. tantofish.)
 //#define MODEL_FILENAME "models\\data3_1_36_106_121.txt"
 #define MODEL_FILENAME "models\\1.txt"
 
-//#define MODEL_FILENAME "models\\biwi_02.txt"
-#define DB_SET	2
+//#define MODEL_FILENAME "models\\biwi_01.txt"
+#define DB_SET 1
 
 //#define DRAW_MODEL_NOSE
 #define AVG_NOSE
@@ -87,7 +96,6 @@ using namespace cv;		//cv must be put after std, (I don't know why. tantofish.)
 /*-----------------------*/
 /*   Iterative Matcher   */
 /*-----------------------*/
-//#ifdef USE_BIWI
 #define CVG_THRE_CNT 2
 #define CVG_THRE_ROT 0.05f
 #define CVG_THRE_EPP 2.0f
@@ -175,6 +183,8 @@ using namespace cv;		//cv must be put after std, (I don't know why. tantofish.)
 	#define NOSE_WINDOW_Y		5
 	#define	SAMPLE_AREA_WIDTH	20
 	#define	SAMPLE_AREA_HEIGHT	20
+	#define	FE_SAMPLE_AREA_WIDTH	30
+	#define	FE_SAMPLE_AREA_HEIGHT	30
 	#define RES_FACTOR			2.f
 #endif
 #ifdef RES_VGA
@@ -182,6 +192,8 @@ using namespace cv;		//cv must be put after std, (I don't know why. tantofish.)
 	#define NOSE_WINDOW_Y		10
 	#define	SAMPLE_AREA_WIDTH	40
 	#define	SAMPLE_AREA_HEIGHT	40
+	#define	FE_SAMPLE_AREA_WIDTH	60
+	#define	FE_SAMPLE_AREA_HEIGHT	60
 	#define RES_FACTOR			1.f
 #endif
 	#define START_DELAY			15

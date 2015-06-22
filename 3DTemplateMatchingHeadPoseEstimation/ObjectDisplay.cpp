@@ -42,6 +42,7 @@ void ObjectDisplay::init(string fileName,
 						 string color, string sp_normal, string sp, 
 						 string dif_R, string dif_G, string dif_B)
 {//special for the Head model which all normals are from texture pictures.
+	
 	HeadOrNot = true;
 
 	objName.assign(fileName);

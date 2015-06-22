@@ -33,6 +33,13 @@ TYSysVariables::TYSysVariables(){
 	isPause = false;
 	doMatch = false;
 	sampleNum = SAMPLE_NUMBER;
+	mpcShowIdx = 0;
+	mpcNum = 1;
+#ifdef FACIAL_EXPRESSION
+	doFacialExpression = true;
+#else
+	doFacialExpression = false;
+#endif
 }
 
 void TYSysVariables::reset(){
@@ -51,4 +58,9 @@ char* TYSysVariables::poseString(){
 
 void TYSysVariables::pause(){
 	isPause = !isPause;
+}
+
+void TYSysVariables::nextMPC(){
+	
+	mpcShowIdx = (mpcShowIdx + 1) % mpcNum;
 }

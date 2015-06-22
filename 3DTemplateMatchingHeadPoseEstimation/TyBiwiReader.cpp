@@ -314,10 +314,9 @@ void TYBiwiDB::Show(){
 	
 	
 
-	imshow("Biwi DB depth",DepthRGB);
-	
+	imshow("Biwi DB Depth",DepthRGB);
 #ifdef BIWI_READ_COLOR
-	imshow("Biwi DB color",ColorRGB);
+	imshow("Biwi DB Color",ColorRGB);
 #endif
 }
 

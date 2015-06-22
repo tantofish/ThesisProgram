@@ -3,6 +3,7 @@
 
 #include "main.h"
 
+
 /*--------------------------------*/
 /*  OpenGL Variables Pack for UI  */
 /*--------------------------------*/
@@ -54,6 +55,8 @@ public:
 	bool isPause;
 	char poseText[100];
 
+	bool doFacialExpression;
+
 	int sampleNum;
 
 	/* reset all variables (except doMatch)*/
@@ -64,6 +67,11 @@ public:
 	void turnOnOffMatch();
 	/* return the pose string (for putting text on the window) */
 	char* poseString();
+
+
+	int mpcNum;		// total model point cloud num
+	int mpcShowIdx;	// model point cloud show index;
+	void nextMPC();
 
 	TYSysVariables();
 };

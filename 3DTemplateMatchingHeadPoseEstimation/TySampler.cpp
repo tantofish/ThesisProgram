@@ -1,4 +1,6 @@
 #include "TySampler.h"
+
+
 //#include "TyTimer.h"
 
 TYSampler::TYSampler(){
@@ -18,6 +20,7 @@ void TYSampler::setSampleArea(float width, float height){
 }
 
 bool TYSampler::randomSampling(const Mat &depthRAW, const Vec6f &pose, const int sampleNum){
+	/* not random now, i made it kind of uniform for reason that sampling number is not big enough */
 	// Initialization
 
 	sample2i.clear();
@@ -25,8 +28,6 @@ bool TYSampler::randomSampling(const Mat &depthRAW, const Vec6f &pose, const int
 	orCloud.clear();
 	irCloud.clear();
 	pcIndex.clear();
-
-	
 
 	// Find the nose tip by inverse rotation 
 	this->findNoseTip(depthRAW, pose);
@@ -37,7 +38,14 @@ bool TYSampler::randomSampling(const Mat &depthRAW, const Vec6f &pose, const int
 
 	// define the sampling area
 	a = (areaW / z) * FOCAL_LEN;
+	if(sysVars->doFacialExpression)	areaH = areaW * 0.625f;
 	b = (areaH / z) * FOCAL_LEN;
+
+	feSample3f.clear();
+	feSample2i.clear();
+	feA = (FE_SAMPLE_AREA_WIDTH / z) * FOCAL_LEN;
+	feB = (FE_SAMPLE_AREA_HEIGHT / z) * FOCAL_LEN;
+
 	areaAngle = -pose[2];	// roll angle
 	float rad = (float) toRad(areaAngle);
 	
@@ -79,6 +87,33 @@ bool TYSampler::randomSampling(const Mat &depthRAW, const Vec6f &pose, const int
 				sumX += pX;
 				sumY += pY;
 				sumZ += pZ;
+			}
+		}
+	}
+
+	if(sysVars->doFacialExpression){
+		feSampleNum = (int)(sampleNum * 5.f);
+		/* Sampling for Facial Expression Recognition */
+		for(int idx = 0 ; idx < feSampleNum ; idx++){
+			float theta = (float) ( toRad( ((float)idx*7/(float)feSampleNum)*360 ) );
+		
+			randX = (int)( sqrtf( (float)idx*0.8f/((float)feSampleNum) + 0.2) * feA * cosf(theta) );
+			randY = (int)( sqrtf( (float)idx*0.8f/((float)feSampleNum) + 0.2) * feB * sinf(theta) );
+	
+			X = (int) ( randX * cosf(rad) - randY * sinf(rad) );
+			Y = (int) ( randX * sinf(rad) + randY * cosf(rad) );
+
+			if(!OUT_OF_BOUNDARY(nose2i.x+X, nose2i.y+Y)){
+			
+				float pZ = depthRAW.at<unsigned short>(nose2i.y+Y, nose2i.x+X);
+				if(pZ != 0){
+					float pX = (IMG_W_HALF-(nose2i.x+X))*pZ*_f*RES_FACTOR;
+					float pY = (IMG_H_HALF-(nose2i.y+Y))*pZ*_f*RES_FACTOR;
+
+					if(sqrt((nose3f.x-pX)*(nose3f.x-pX)+(nose3f.y-pY)*(nose3f.y-pY)+(nose3f.z-pZ)*(nose3f.z-pZ)) > 80)	continue;
+					feSample2i.push_back( Point(nose2i.x+X, nose2i.y+Y) );
+					feSample3f.push_back( Point3f(pX,pY,pZ));
+				}
 			}
 		}
 	}
@@ -360,7 +395,7 @@ void TYSampler::findNoseTip(const Mat &depthRAW, const Vec6f &pose){
 }
 
 void TYSampler::drawSamples2i(Mat &image){
-	if(nose2i.x < 0 || nose2i.x > 640)	return;
+	if(nose2i.x < 0 || nose2i.x >= IMG_W)	return;
 
 #ifdef DRAW_NSW_ON_2D
 	// Draw the Nose Searching Window on the "depthRGB" image
@@ -387,6 +422,19 @@ void TYSampler::drawSamples2i(Mat &image){
 		image.at<Vec3b>(sample2i[i].y, sample2i[i].x)[1] = 0;
 		image.at<Vec3b>(sample2i[i].y, sample2i[i].x)[2] = 255;
 	}
+
+	if(sysVars->doFacialExpression){
+		// Draw the sample area boundary on the "depthRGB" image
+		ellipse(image, RotatedRect(nose2i, Size2f(2*feA, 2*feB), areaAngle), CV_RGB(0, 255, 255));
+
+		// Draw the sample points on the "depthRGB" image
+		for(unsigned int i = 0 ; i < feSample2i.size() ; i++){
+			image.at<Vec3b>(feSample2i[i].y, feSample2i[i].x)[0] = 255;
+			image.at<Vec3b>(feSample2i[i].y, feSample2i[i].x)[1] = 255;
+			image.at<Vec3b>(feSample2i[i].y, feSample2i[i].x)[2] = 0;
+		}
+	}
+
 #endif
 }
 
@@ -423,6 +471,11 @@ void TYSampler::drawSamples3f(){
 void TYSampler::reset(){
 	startDelay = 10;
 }
+
 void TYSampler::switchNoseSmooth(){
 	noseSmoothTerm = !noseSmoothTerm;
+}
+
+void TYSampler::getSysVars(TYSysVariables *sysV){
+	this->sysVars = sysV;
 }

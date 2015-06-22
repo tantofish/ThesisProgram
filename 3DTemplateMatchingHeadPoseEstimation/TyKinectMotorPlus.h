@@ -19,11 +19,12 @@
 
 class TYKinectMotorPlus : public TYKinect{
 public:
-	TYKinectMotorPlus(bool syncTwoVeiw = true, bool mirroring = true);
+	TYKinectMotorPlus(bool syncTwoVeiw = true, bool mirroring = true, char *filename = "");
 	bool motorUp();
 	bool motorDown();
 	bool setLed(int color);
 private:
+	int device_count;
 	CLNUIMotor	motor;
 	PCHAR motor_serial;
 	int motor_pos;
